@@ -68,7 +68,7 @@ class Movies extends Model
                 $result = curl_exec($curlTMP);
                 curl_close($curlTMP);
 
-                $title = isset($data->original_title) ? $data->original_title : null;
+                $title = isset($data->title) ? $data->title : null;
 
                 preg_match('/Also Known As.*> (.*)/', $result, $match);
                 $french_title = isset($match[1]) ? $match[1] : null;
@@ -94,7 +94,7 @@ class Movies extends Model
 
                 $backdrop_path = null;
                 if ($data->backdrop_path !== null) {
-                    $backdrop_path = str_replace(" ", "_", $data->original_title). '.jpg';
+                    $backdrop_path = str_replace(" ", "_", $data->title). '.jpg';
                 }
 
                 $movie = new Movies([
@@ -105,8 +105,8 @@ class Movies extends Model
                     'duration' => $duration,
                     'rating' => $rating,
                     'backdrop_path' => $backdrop_path,
-                    'image_original' => str_replace(" ", "_", $data->original_title). '.jpg',
-                    'image_small' => str_replace(" ", "_", $data->original_title). '_small.jpg',
+                    'image_original' => str_replace(" ", "_", $data->title). '.jpg',
+                    'image_small' => str_replace(" ", "_", $data->title). '_small.jpg',
                     'description' => $description,
                     'gross' => $gross,
                     'budget' => $budget,
@@ -118,16 +118,16 @@ class Movies extends Model
                 $saved = $movie->save();
 
                 //Check if image already exist
-                if (!file_exists('/var/www/api/public/img/'. str_replace(" ", "_", $data->original_title). '.jpg')) {
+                if (!file_exists('/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '.jpg')) {
                     (new Movies)->save_image('https://image.tmdb.org/t/p/w185'. $data->poster_path,
-                        '/var/www/api/public/img/'. str_replace(" ", "_", $data->original_title). '_small.jpg');
+                        '/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '_small.jpg');
 
                     (new Movies)->save_image('https://image.tmdb.org/t/p/original'. $data->poster_path,
-                        '/var/www/api/public/img/'. str_replace(" ", "_", $data->original_title). '.jpg');
+                        '/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '.jpg');
 
                     if ($backdrop_path !== null) {
                         (new Movies)->save_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->backdrop_path,
-                            '/var/www/api/public/img/b/'. str_replace(" ", "_", $data->original_title). '.jpg');
+                            '/var/www/api/public/img/b/'. str_replace(" ", "_", $data->title). '.jpg');
                     }
                 }
 
