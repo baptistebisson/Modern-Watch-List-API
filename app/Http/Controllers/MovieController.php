@@ -8,7 +8,6 @@ use App\movie_user;
 use DB;
 use Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Token;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 
@@ -16,13 +15,14 @@ class MovieController extends BaseController
 {
 
     public function searchMovie(Request $request) {
+        $movie = new Movies();
         $return['error'] = true;
 
         $movie_to_find = $request->get('title');
         $movie_to_find = str_replace(" ", "_", $movie_to_find);
         $first_letter = strtolower(substr($movie_to_find, 0, 1));
         if (strlen($movie_to_find) > 3) {
-            $return = Movies::findMovie($movie_to_find, $first_letter);
+            $return = $movie->findMovie($movie_to_find, $first_letter);
         }
 
         return json_encode($return);
@@ -30,12 +30,14 @@ class MovieController extends BaseController
 
     public function createMovie(Request $request)
     {
-        $movie = Movies::getMovie($request->get('id'), $request->get('user_id'));
+        $movie = new Movies();
+        $movie = $movie->getMovie($request->get('id'), $request->get('user_id'));
         return $movie;
     }
 
     public function getUserMovies()
     {
+        $movie = new Movies();
         $user = User::find(1);
         $return = null;
         $return = $user->movies;
@@ -45,6 +47,7 @@ class MovieController extends BaseController
 
     public function getDetailsMovie(Request $request)
     {
+        $movie = new Movies();
         if (DB::table('movie_user')->where('movie_id', $request->get('id'))->where('user_id', 1)->exists()) {
             $rate = DB::table('movie_user')->where('movie_id', $request->get('id'))->where('user_id', 1)->select('rating')->first();
             $movie = Movies::with('genres', 'actors', 'directors')->where('id', $request->get('id'))->first();
