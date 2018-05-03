@@ -6,14 +6,7 @@ use App\Helpers\Crawler;
 use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use App\Helpers\Curl;
-use App\MovieActor;
-use App\Genre;
-use App\Director;
-use App\MovieGenre;
-use App\MovieDirector;
-use App\Movieusers;
 use DB;
-use App\Jobs\MovieJob;
 use App\Helpers\Response;
 use Illuminate\Support\Facades\Log;
 
@@ -44,7 +37,7 @@ class Movies extends Model
         return $this->belongsToMany('App\User', 'movie_id');
     }
 
-    public static function getMovie($id, $user_id = null) {
+    public function getMovie($id, $user_id = null) {
         $response = new Response();
 
         if (substr($id, 0, 2) == "tt") {
@@ -262,7 +255,7 @@ class Movies extends Model
         return $response->get();
     }
 
-    public static function findMovie($movie_title, $letter) {
+    public function findMovie($movie_title, $letter) {
         $return['error'] = true;
 
         $curl = curl_init();
@@ -373,7 +366,7 @@ class Movies extends Model
     /**
      * Import popular movies into database
      */
-    public static function importPopularMovies() {
+    public function importPopularMovies() {
         $total = 0;
         $u = new Utils();
         $u->timeInit();

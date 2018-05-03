@@ -50,7 +50,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $this->getKey();
     }
 
-    public static function getStats() {
+    public function getStats() {
         $stats = null;
         $totalMovies = DB::table('movie_user')->where('user_id', 1)->count();
         //$totalHours = DB::table('movies')->with('movie_user')->where('user_id', 1)->get();
@@ -126,7 +126,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $stats;
     }
 
-    public static function test() {
+    public function test() {
         $movies = DB::table('movie_user')
             ->where('user_id', 1)->get();
 
@@ -142,7 +142,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return true;
     }
 
-    public static function deleteData($id, $type) {
+    public function deleteData($id, $type) {
         $response = new Response();
         
         if ($type == "movie") {
@@ -162,7 +162,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $response->get();
     }
 
-    public static function addMark($id, $type, $mark) {
+    public function addMark($id, $type, $mark) {
         $response = new Response();
 
         if ($type == "movie") {

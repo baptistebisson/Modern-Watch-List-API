@@ -10,23 +10,27 @@ class UserController extends BaseController
 {
     public function getStats(Request $request)
     {
-        $movie = User::getStats($request->get('id'), $request->get('user_id'));
+        $user = new User();
+        $movie = $user->getStats($request->get('id'), $request->get('user_id'));
         return $movie;
     }
 
     public function deleteData(Request $request) {
-        $movie = User::deleteData($request->get('id'), $request->get('type'));
+        $user = new User();
+        $movie = $user->deleteData($request->get('id'), $request->get('type'));
         return $movie;
     }
 
     public function addMark(Request $request) {
-        $movie = User::addMark($request->get('id'), $request->get('type'), $request->get('mark'));
+        $user = new User();
+        $movie = $user->addMark($request->get('id'), $request->get('type'), $request->get('mark'));
         return $movie;
     }
 
     public function test()
     {
-        $movie = User::test();
+        $user = new User();
+        $movie = $user->test();
         return "";
     }
 }
