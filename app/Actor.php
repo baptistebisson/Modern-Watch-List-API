@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use DB;
 use App\Helpers\Curl;
@@ -15,6 +16,7 @@ class Actor extends Model
 
     public static function getActor($actorData)
     {
+        $util = new Utils();
         $no_picture = false;
         $curl = curl_init();
         $url = 'http://www.imdb.com/name/'. $actorData->imdb_id .'/?ref_=tt_ov_st_sm';
@@ -67,10 +69,10 @@ class Actor extends Model
 
         if (!$no_picture) {
             if (!file_exists('/var/www/api/public/img/a/'. str_replace(" ", "_", $actorData->name). '.jpg')) {
-                (new Actor)->save_image('https://image.tmdb.org/t/p/w185'. $actorData->profile_path,
+                $util->save_image('https://image.tmdb.org/t/p/w185'. $actorData->profile_path,
                     '/var/www/api/public/img/a/'. str_replace(" ", "_", $actorData->name). '_small.jpg');
 
-                (new Actor)->save_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path,
+                $util->save_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path,
                     '/var/www/api/public/img/a/'. str_replace(" ", "_", $actorData->name). '.jpg');
             }
         }

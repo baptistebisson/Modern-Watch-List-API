@@ -38,6 +38,7 @@ class Movies extends Model
     }
 
     public function getMovie($id, $user_id = null) {
+        $util = new Utils();
         $response = new Response();
 
         if (substr($id, 0, 2) == "tt") {
@@ -112,14 +113,14 @@ class Movies extends Model
 
                 //Check if image already exist
                 if (!file_exists('/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '.jpg')) {
-                    (new Movies)->save_image('https://image.tmdb.org/t/p/w185'. $data->poster_path,
+                    $util->save_image('https://image.tmdb.org/t/p/w185'. $data->poster_path,
                         '/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '_small.jpg');
 
-                    (new Movies)->save_image('https://image.tmdb.org/t/p/original'. $data->poster_path,
+                    $util->save_image('https://image.tmdb.org/t/p/original'. $data->poster_path,
                         '/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '.jpg');
 
                     if ($backdrop_path !== null) {
-                        (new Movies)->save_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->backdrop_path,
+                        $util->save_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->backdrop_path,
                             '/var/www/api/public/img/b/'. str_replace(" ", "_", $data->title). '.jpg');
                     }
                 }
@@ -255,57 +256,12 @@ class Movies extends Model
         return $response->get();
     }
 
-    public function findMovie($movie_title, $letter) {
-        $return['error'] = true;
+    public function findMovie($movie_title) {
+        $result = null;
+        $curl = new Curl();
+        $result = $curl->getData("https://api.themoviedb.org/3/search/movie?api_key=MOVIE_KEY&language=en-US&query=$movie_title&page=1&include_adult=false");
 
-        $curl = curl_init();
-        $url = "https://v2.sg.media-imdb.com/suggests/$letter/$movie_title.json";
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        //Only english page
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Accept-Language: en']);
-
-        $result = curl_exec($curl);
-        curl_close($curl);
-
-        preg_match('/imdb\$.*?\((.*)\)/', $result, $match);
-        $result = json_decode($match[1]);
-        $movies = array();
-
-        $i=0;
-        foreach ($result->d as $key => $value) {
-            $i++;
-            //We don't want more than 6 movies at a time
-            if($i == 5) break;
-
-            $title = $value->l;
-            $id = $value->id;
-
-            if (isset($value->i)) {
-                $image = $value->i;
-                (new Movies)->save_image($image[0], '/var/www/api/public/img/'. str_replace(" ", "_", $title). '.jpg');
-                $image = 'http://api.baptiste-bisson.com/img/'. str_replace(" ", "_", $title). '.jpg';
-            } else {
-                $image = null;
-            }
-
-            if (isset($value->y)) {
-                $year = $value->y;
-            } else {
-                $year = null;
-            }
-            $movies[] = array(
-                'title' => $title,
-                'id' => $id,
-                'year' => $year,
-                'image' => $image,
-            );
-
-            $return['movie'] = $movies;
-            $return['error'] = false;
-        }
-
-        return $return;
+        return $result;
     }
 
     /**
@@ -400,30 +356,15 @@ class Movies extends Model
         Log::debug("Popular Movie total imported : " . $total);
     }
 
+    /**
+     * Get popular movies
+     * @return mixed
+     */
     public function getPopularMovies() {
         $movies = DB::table('movies')->where('popular', 1)->get();
         return $movies;
     }
 
-
-    private function save_image($img, $fullpath) {
-        $write = null;
-        $ch = curl_init ($img);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-        $rawdata = curl_exec($ch);
-        curl_close ($ch);
-        if (!file_exists($fullpath)) {
-            $fp = fopen($fullpath,'x');
-            $write = fwrite($fp, $rawdata);
-            fclose($fp);
-    	}
-        if ($write !== null) {
-            $write = 1;
-        }
-        return $write;
-    }
 
     public function genres() {
         return $this->belongsToMany('App\Genre', 'movie_genre', 'movie_id', 'genre_id');

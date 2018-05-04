@@ -46,4 +46,29 @@ class Utils
         $user = JWTAuth::toUser($token);
         return $user->id;
     }
+
+    /**
+     * Save image into server
+     * @param $img
+     * @param $fullpath
+     * @return bool|int|null
+     */
+    public function save_image($img, $fullpath) {
+        $write = null;
+        $ch = curl_init ($img);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
+        $rawdata = curl_exec($ch);
+        curl_close ($ch);
+        if (!file_exists($fullpath)) {
+            $fp = fopen($fullpath,'x');
+            $write = fwrite($fp, $rawdata);
+            fclose($fp);
+        }
+        if ($write !== null) {
+            $write = 1;
+        }
+        return $write;
+    }
 }

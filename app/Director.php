@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 
 
@@ -14,6 +15,7 @@ class Director extends Model
 
     public static function getDirector($directorData)
     {
+        $util = new Utils();
         $no_picture = false;
         $curl = curl_init();
         $url = 'http://www.imdb.com/name/'. $directorData->imdb_id .'/?ref_=tt_ov_st_sm';
@@ -66,10 +68,10 @@ class Director extends Model
 
         if (!$no_picture) {
             if (!file_exists('/var/www/api/public/img/d/'. str_replace(" ", "_", $directorData->name). '.jpg')) {
-                (new Director)->save_image('https://image.tmdb.org/t/p/w185'. $directorData->profile_path,
+                $util->save_image('https://image.tmdb.org/t/p/w185'. $directorData->profile_path,
                     '/var/www/api/public/img/d/'. str_replace(" ", "_", $directorData->name). '_small.jpg');
 
-                (new Director)->save_image('https://image.tmdb.org/t/p/original'. $directorData->profile_path,
+                $util->save_image('https://image.tmdb.org/t/p/original'. $directorData->profile_path,
                     '/var/www/api/public/img/d/'. str_replace(" ", "_", $directorData->name). '.jpg');
             }
         }

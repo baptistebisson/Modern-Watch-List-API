@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Helpers\Response;
 use App\Helpers\Utils;
 use Illuminate\Http\Request;
 use App\Movies;
@@ -15,20 +16,29 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 class MovieController extends BaseController
 {
 
+    /**
+     * Search a movie online
+     * @param Request $request
+     * @return string Result
+     */
     public function searchMovie(Request $request) {
+        $movies = null;
         $movie = new Movies();
-        $return['error'] = true;
 
-        $movie_to_find = $request->get('title');
-        $movie_to_find = str_replace(" ", "_", $movie_to_find);
-        $first_letter = strtolower(substr($movie_to_find, 0, 1));
+        $request_title = $request->get('title');
+        $movie_to_find = str_replace(" ", "%20%", $request_title);
         if (strlen($movie_to_find) > 3) {
-            $return = $movie->findMovie($movie_to_find, $first_letter);
+            $movies = $movie->findMovie($movie_to_find);
         }
 
-        return json_encode($return);
+        return json_encode($movies);
     }
 
+    /**
+     * Create a movie into the database
+     * @param Request $request
+     * @return Movies|array
+     */
     public function createMovie(Request $request)
     {
         $util = new Utils();
@@ -37,6 +47,11 @@ class MovieController extends BaseController
         return $movie;
     }
 
+    /**
+     * Get user movies list
+     * @param Request $request
+     * @return string
+     */
     public function getUserMovies(Request $request)
     {
         $util = new Utils();
@@ -46,6 +61,11 @@ class MovieController extends BaseController
         return json_encode($movies);
     }
 
+    /**
+     * Get details of a movie
+     * @param Request $request
+     * @return string
+     */
     public function getDetailsMovie(Request $request)
     {
         $util = new Utils();
@@ -66,6 +86,11 @@ class MovieController extends BaseController
         }
     }
 
+    /**
+     * Move the position of a movie into user list
+     * @param Request $request
+     * @return array
+     */
     public function moveMovie(Request $request) {
         $movie = new Movies();
         $util = new Utils();
@@ -74,6 +99,11 @@ class MovieController extends BaseController
         return $return;
     }
 
+    /**
+     * Refresh movies list
+     * @param Request $request
+     * @return string
+     */
     public function refresh(Request $request) {
         $movie = new Movies();
         $util = new Utils();
@@ -82,6 +112,10 @@ class MovieController extends BaseController
         return json_encode($return);
     }
 
+    /**
+     * Get popular movies
+     * @return string
+     */
     public function getPopularMovies() {
         $movie = new Movies();
         $movies = $movie->getPopularMovies();
