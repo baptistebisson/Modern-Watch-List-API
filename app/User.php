@@ -9,6 +9,7 @@ use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use phpDocumentor\Reflection\Types\Integer;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use DB;
 use App\Movies;
@@ -50,7 +51,13 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $this->getKey();
     }
 
-    public function getStats($user_id) {
+
+    /**
+     * Get user stats
+     * @param Integer $user_id
+     * @return array|null
+     */
+    public function getStats(Integer $user_id) {
         $stats = null;
         $totalMovies = DB::table('movie_user')->where('user_id', $user_id)->count();
 
@@ -142,12 +149,19 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return true;
     }
 
-    public function deleteMovie($id, $type, $user_id) {
+    /**
+     * Delete movie from user list
+     * @param Integer $movie_id
+     * @param String $type
+     * @param Integer $user_id
+     * @return array
+     */
+    public function deleteMovie(Integer $movie_id, String $type, Integer $user_id) {
         $response = new Response();
         
         if ($type == "movie") {
-            if (DB::table('movies')->where('id', $id)->exists()) {
-                $movie = DB::table('movies')->where('id', $id)->first();
+            if (DB::table('movies')->where('id', $movie_id)->exists()) {
+                $movie = DB::table('movies')->where('id', $movie_id)->first();
                 $delete = DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie->id)->delete();
                 if ($delete) {
                     $response->error([false, 'Success']);
@@ -162,12 +176,20 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $response->get();
     }
 
-    public function addMark($id, $type, $mark, $user_id) {
+    /**
+     * Add a mark to the movie
+     * @param Integer $movie_id
+     * @param String $type
+     * @param Integer $mark
+     * @param Integer $user_id
+     * @return array
+     */
+    public function addMark(Integer $movie_id, String $type, Integer $mark, Integer $user_id) {
         $response = new Response();
 
         if ($type == "movie") {
             $saved = DB::table('movie_user')
-            ->where('movie_id', $id)
+            ->where('movie_id', $movie_id)
             ->where('user_id', $user_id)
             ->update(['rating' => $mark]);
             if ($saved) {

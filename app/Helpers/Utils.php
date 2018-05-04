@@ -15,11 +15,18 @@ class Utils
 
     }
 
+    /**
+     * Init time
+     */
     public function timeInit()
     {
         $this->executionStartTime = microtime(true);
     }
 
+    /**
+     * Get function duration
+     * @return string
+     */
     public function timeGet()
     {
         $executionEndTime = microtime(true);
@@ -27,6 +34,11 @@ class Utils
         return number_format($seconds,3) . 's';
     }
 
+    /**
+     * Get user id from request token
+     * @param Request $request
+     * @return mixed
+     */
     public function getUserId(Request $request)
     {
         JWTAuth::parseToken();
