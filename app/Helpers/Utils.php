@@ -2,6 +2,9 @@
 
 namespace App\Helpers;
 
+use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
 class Utils
 {
     protected $time;
@@ -22,5 +25,13 @@ class Utils
         $executionEndTime = microtime(true);
         $seconds = $executionEndTime - $this->executionStartTime;
         return number_format($seconds,3) . 's';
+    }
+
+    public function getUserId(Request $request)
+    {
+        JWTAuth::parseToken();
+        $token = JWTAuth::getToken();
+        $user = JWTAuth::toUser($token);
+        return $user->id;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Helpers\Utils;
 use Illuminate\Http\Request;
 use App\Movies;
 use App\User;
@@ -30,27 +31,34 @@ class MovieController extends BaseController
 
     public function createMovie(Request $request)
     {
+        $util = new Utils();
         $movie = new Movies();
-        $movie = $movie->getMovie($request->get('id'), $request->get('user_id'));
+        $movie = $movie->getMovie($request->get('id'), $util->getUserId($request));
         return $movie;
     }
 
-    public function getUserMovies()
+    public function getUserMovies(Request $request)
     {
-        $movie = new Movies();
-        $user = User::find(1);
-        $return = null;
-        $return = $user->movies;
-        //dd($return->toSql(), $return->getBindings());
-        return json_encode($return);
+        $util = new Utils();
+        $user = User::find($util->getUserId($request));
+        $movies = $user->movies;
+
+        return json_encode($movies);
     }
 
     public function getDetailsMovie(Request $request)
     {
-        $movie = new Movies();
-        if (DB::table('movie_user')->where('movie_id', $request->get('id'))->where('user_id', 1)->exists()) {
-            $rate = DB::table('movie_user')->where('movie_id', $request->get('id'))->where('user_id', 1)->select('rating')->first();
-            $movie = Movies::with('genres', 'actors', 'directors')->where('id', $request->get('id'))->first();
+        $util = new Utils();
+        if (DB::table('movie_user')->where('movie_id', $request->get('id'))->where('user_id', $util->getUserId($request))->exists()) {
+            $rate = DB::table('movie_user')
+                ->where('movie_id', $request->get('id'))
+                ->where('user_id', $util->getUserId($request))
+                ->select('rating')->first();
+
+            $movie = Movies::with('genres', 'actors', 'directors')
+                ->where('id', $request->get('id'))
+                ->first();
+
             $movie['user_rate'] = $rate->rating;
             return json_encode($movie);
         } else {
@@ -60,21 +68,17 @@ class MovieController extends BaseController
 
     public function moveMovie(Request $request) {
         $movie = new Movies();
-        JWTAuth::parseToken();
-        $token = JWTAuth::getToken();
+        $util = new Utils();
 
-        $user = JWTAuth::toUser($token);
-        $return = $movie->moveMovie($request->get('movies'), $user->id);
+        $return = $movie->moveMovie($request->get('movies'), $util->getUserId($request));
         return $return;
     }
 
     public function refresh(Request $request) {
         $movie = new Movies();
-        JWTAuth::parseToken();
-        $token = JWTAuth::getToken();
+        $util = new Utils();
 
-        $user = JWTAuth::toUser($token);
-        $return = $movie->upToDate($request->get('movies'), $user->id);
+        $return = $movie->upToDate($request->get('movies'), $util->getUserId($request));
         return json_encode($return);
     }
 

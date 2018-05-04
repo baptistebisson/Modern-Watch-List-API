@@ -310,9 +310,9 @@ class Movies extends Model
 
     /**
      * Move movie to desired position
-     * @param  Array  $movies   List of movie_id and movie_position
-     * @param  Int    $user_id  User id
-     * @return Array            Message
+     * @param  array  $movies   List of movie_id and movie_position
+     * @param  int    $user_id  User id
+     * @return array            Message
      */
     public function moveMovie($movies, $user_id) {
         $return = array(
@@ -332,9 +332,9 @@ class Movies extends Model
 
     /**
      * Check if user movies is up to date
-     * @param  Array    $movies    List of movie_id and movie_position
-     * @param  Int      $user_id   User id
-     * @return Boolean             Response
+     * @param  array    $movies    List of movie_id and movie_position
+     * @param  int      $user_id   User id
+     * @return boolean             Response
      */
     public function upToDate($movies, $user_id) {
         $refresh = false;
