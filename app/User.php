@@ -50,13 +50,13 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $this->getKey();
     }
 
-    public function getStats() {
+    public function getStats($user_id) {
         $stats = null;
-        $totalMovies = DB::table('movie_user')->where('user_id', 1)->count();
-        //$totalHours = DB::table('movies')->with('movie_user')->where('user_id', 1)->get();
+        $totalMovies = DB::table('movie_user')->where('user_id', $user_id)->count();
+
         $totalHours = DB::table('movies')
                         ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
-                        ->where('user_id', '=', 1)
+                        ->where('user_id', '=', $user_id)
                         ->sum('movies.duration');
 
         $actor = DB::table('movies')
@@ -64,7 +64,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
                         ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
                         ->join('movie_actor', 'movies.id', '=', 'movie_actor.movie_id')
                         ->join('actors', 'movie_actor.actor_id', '=', 'actors.id')
-                        ->where('user_id', '=', 1)
+                        ->where('user_id', '=', $user_id)
                         ->groupBy('actor_id')
                         ->orderBy('total', 'desc')
                         ->limit(3)
@@ -75,7 +75,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
                         ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
                         ->join('movie_genre', 'movies.id', '=', 'movie_genre.movie_id')
                         ->join('genres', 'movie_genre.genre_id', '=', 'genres.id')
-                        ->where('user_id', '=', 1)
+                        ->where('user_id', '=', $user_id)
                         ->groupBy('genres.name')
                         ->orderBy('total', 'desc')
                         ->limit(5)
@@ -83,21 +83,21 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
 
         $gross = DB::table('movies')
         ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
-        ->where('user_id', '=', 1)
+        ->where('user_id', '=', $user_id)
         ->orderBy('movies.gross', 'desc')
         ->limit(1)
         ->first();
 
         $budget = DB::table('movies')
         ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
-        ->where('user_id', '=', 1)
+        ->where('user_id', '=', $user_id)
         ->orderBy('movies.budget', 'desc')
         ->limit(1)
         ->first();
         
         $totalByDay = DB::table('movie_user')
         ->select(DB::raw('DATE(date_added) as date'), DB::raw('count(*) as total'))
-        ->where('user_id', '=', 1)
+        ->where('user_id', '=', $user_id)
         ->groupBy('date')
         ->get();
 
@@ -127,35 +127,28 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function test() {
-        $util = new Utils();
-        $movies = DB::table('movies')
-            ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
-            ->where('user_id', 1)
-            ->get();
+        $movies = DB::table('movie_user')
+            ->where('user_id', 1)->get();
 
-        var_dump($movies);
-//        $movies = DB::table('movie_user')
-//            ->where('user_id', 1)->get();
-//
-//        foreach ($movies as $movie) {
-//            if ($movie->rating > 0) {
-//                //DB::table('movie_user')->where('user_id', 1)->update(['rating', $movie->rating + 1]);
+        foreach ($movies as $movie) {
+            if ($movie->rating > 0) {
+                //DB::table('movie_user')->where('user_id', 1)->update(['rating' => $movie->rating + 1]);
 //                var_dump($movie->movie_id);
 //                var_dump($movie->rating);
 //                var_dump($movie->rating + 1);
-//            }
-//        }
+            }
+        }
 
         return true;
     }
 
-    public function deleteData($id, $type) {
+    public function deleteMovie($id, $type, $user_id) {
         $response = new Response();
         
         if ($type == "movie") {
             if (DB::table('movies')->where('id', $id)->exists()) {
                 $movie = DB::table('movies')->where('id', $id)->first();
-                $delete = DB::table('movie_user')->where('user_id', 1)->where('movie_id', $movie->id)->delete();
+                $delete = DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie->id)->delete();
                 if ($delete) {
                     $response->error([false, 'Success']);
                 } else {
@@ -169,13 +162,13 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $response->get();
     }
 
-    public function addMark($id, $type, $mark) {
+    public function addMark($id, $type, $mark, $user_id) {
         $response = new Response();
 
         if ($type == "movie") {
             $saved = DB::table('movie_user')
             ->where('movie_id', $id)
-            ->where('user_id', 1)
+            ->where('user_id', $user_id)
             ->update(['rating' => $mark]);
             if ($saved) {
                 $response->error([false, 'Mark added']);
