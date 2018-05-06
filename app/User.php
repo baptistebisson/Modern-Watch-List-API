@@ -54,10 +54,10 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
 
     /**
      * Get user stats
-     * @param Integer $user_id
+     * @param int $user_id
      * @return array|null
      */
-    public function getStats(Integer $user_id) {
+    public function getStats(int $user_id) {
         $stats = null;
         $totalMovies = DB::table('movie_user')->where('user_id', $user_id)->count();
 
