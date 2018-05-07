@@ -12,7 +12,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use phpDocumentor\Reflection\Types\Integer;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use DB;
-use App\Movies;
+use App\Movie;
 use App\Actor;
 use App\User;
 use App\movie_user;
@@ -201,7 +201,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function movies() {
-        return $this->belongsToMany('App\Movies', 'movie_user', 'user_id', 'movie_id')->orderBy('position')->withPivot('date_added', 'rating', 'position');
+        return $this->belongsToMany('App\Movie', 'movie_user', 'user_id', 'movie_id')->orderBy('position')->withPivot('date_added', 'rating', 'position');
     }
 
     /**

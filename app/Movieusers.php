@@ -29,6 +29,6 @@ class Movieusers extends Model
     ];
 
     public function movies() {
-        return $this->hasMany('App\Movies', 'imdb_id');
+        return $this->hasMany('App\Movie', 'imdb_id');
     }
 }

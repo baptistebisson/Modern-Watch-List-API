@@ -2,7 +2,7 @@
 
 namespace App\Console;
 
-use App\Movies;
+use App\Movie;
 use Illuminate\Console\Scheduling\Schedule;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function() {
-            $movie = new Movies();
+            $movie = new Movie();
             $movie->importPopularMovies();
         })->weekly();
     }

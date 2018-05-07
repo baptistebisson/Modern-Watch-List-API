@@ -10,7 +10,7 @@ use DB;
 use App\Helpers\Response;
 use Illuminate\Support\Facades\Log;
 
-class Movies extends Model
+class Movie extends Model
 {
     public $timestamps = false;
 
@@ -91,7 +91,7 @@ class Movies extends Model
                     $backdrop_path = str_replace(" ", "_", $data->title). '.jpg';
                 }
 
-                $movie = new Movies([
+                $movie = new Movie([
                     'imdb_id' => $imdb_id,
                     'api_id' => $data->id,
                     'title' => $title,
@@ -342,7 +342,7 @@ class Movies extends Model
                     DB::table('movies')->where('imdb_id', $id[0])->update(['popular', 1]);
                 } else {
                     // Create movie
-                    $insert = Movies::getMovie($id[0]);
+                    $insert = Movie::getMovie($id[0]);
                     if ($insert['error'] == false) {
                         $total++;
                     }

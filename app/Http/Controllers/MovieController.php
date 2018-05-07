@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use App\Helpers\Response;
 use App\Helpers\Utils;
 use Illuminate\Http\Request;
-use App\Movies;
+use App\Movie;
 use App\User;
 use App\movie_user;
 use DB;
@@ -23,7 +23,7 @@ class MovieController extends BaseController
      */
     public function searchMovie(Request $request) {
         $movies = null;
-        $movie = new Movies();
+        $movie = new Movie();
 
         $request_title = $request->get('title');
         $movie_to_find = str_replace(" ", "%20%", $request_title);
@@ -37,12 +37,12 @@ class MovieController extends BaseController
     /**
      * Create a movie into the database
      * @param Request $request
-     * @return Movies|array
+     * @return Movie|array
      */
     public function createMovie(Request $request)
     {
         $util = new Utils();
-        $movie = new Movies();
+        $movie = new Movie();
         $movie = $movie->getMovie($request->get('id'), $util->getUserId($request));
         return $movie;
     }
@@ -75,7 +75,7 @@ class MovieController extends BaseController
                 ->where('user_id', $util->getUserId($request))
                 ->select('rating')->first();
 
-            $movie = Movies::with('genres', 'actors', 'directors')
+            $movie = Movie::with('genres', 'actors', 'directors')
                 ->where('id', $request->get('id'))
                 ->first();
 
@@ -92,7 +92,7 @@ class MovieController extends BaseController
      * @return array
      */
     public function moveMovie(Request $request) {
-        $movie = new Movies();
+        $movie = new Movie();
         $util = new Utils();
 
         $return = $movie->moveMovie($request->get('movies'), $util->getUserId($request));
@@ -105,7 +105,7 @@ class MovieController extends BaseController
      * @return string
      */
     public function refresh(Request $request) {
-        $movie = new Movies();
+        $movie = new Movie();
         $util = new Utils();
 
         $return = $movie->upToDate($request->get('movies'), $util->getUserId($request));
@@ -117,7 +117,7 @@ class MovieController extends BaseController
      * @return string
      */
     public function getPopularMovies() {
-        $movie = new Movies();
+        $movie = new Movie();
         $movies = $movie->getPopularMovies();
         return json_encode($movies);
     }

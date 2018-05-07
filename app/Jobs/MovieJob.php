@@ -5,7 +5,7 @@ namespace App\Jobs;
 use Illuminate\Database\Eloquent\Model;
 use App\Helpers\Curl;
 use App\MovieActor;
-use App\Movies;
+use App\Movie;
 use App\Genre;
 use App\Director;
 use App\Actor;
@@ -77,7 +77,7 @@ class MovieJob extends Job
             $backdrop_path = str_replace(" ", "_", $data->original_title). '.jpg';
         }
 
-        $movie = new Movies([
+        $movie = new Movie([
             'imdb_id' => $imdb_id,
             'api_id' => $data->id,
             'title' => $title,
