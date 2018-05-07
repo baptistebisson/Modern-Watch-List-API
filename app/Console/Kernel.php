@@ -26,7 +26,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function() {
-            Movies::importPopularMovies();
+            $movie = new Movies();
+            $movie->importPopularMovies();
         })->weekly();
     }
 }
