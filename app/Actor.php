@@ -14,7 +14,7 @@ class Actor extends Model
     'popularity','height','birth_date','death_date','gender','image_original', 'image_small'];
     public $timestamps = false;
 
-    public static function getActor($actorData)
+    public static function importActor($actorData)
     {
         $util = new Utils();
         $no_picture = false;

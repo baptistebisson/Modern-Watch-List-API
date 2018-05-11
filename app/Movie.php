@@ -179,7 +179,7 @@ class Movie extends Model
                         if (!DB::table('actors')->where('name', $value->name)->exists() && !DB::table('actors')->where('api_id', $value->id)->exists()) {
                             $actorData = $curl->getData("https://api.themoviedb.org/3/person/". $value->id ."?api_key=MOVIE_KEY&language=en-US");
                             $actor = new Actor();
-                            $actor = $actor->getActor($actorData);
+                            $actor = $actor->importActor($actorData);
                         } else {
                             $actor = DB::table('actors')->where('name', $value->name)->first();
                         }
@@ -206,7 +206,7 @@ class Movie extends Model
                             if (!DB::table('directors')->where('name', $value->name)->exists()) {
                                 $directorData = $curl->getData("https://api.themoviedb.org/3/person/". $value->id ."?api_key=MOVIE_KEY&language=en-US");
                                 $director = new Director();
-                                $director = $director->getDirector($directorData);
+                                $director = $director->importDirector($directorData);
                             } else {
                                 $director = DB::table('directors')->where('name', $value->name)->first();
                             }

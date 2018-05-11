@@ -13,7 +13,7 @@ class Director extends Model
     'height','birth_date','death_date','gender','image_original', 'image_small'];
     public $timestamps = false;
 
-    public static function getDirector($directorData)
+    public static function importDirector($directorData)
     {
         $util = new Utils();
         $no_picture = false;
