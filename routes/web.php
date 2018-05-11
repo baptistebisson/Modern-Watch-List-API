@@ -31,6 +31,7 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->get('/user/stats', 'UserController@getStats');
     $router->post('/user/delete', 'UserController@deleteData');
     $router->post('/user/mark', 'UserController@addMark');
+    $router->get('/movie/get', 'UserController@getUserMovies');
 
     $router->post('/actor/details', 'ActorController@getDetails');
 
@@ -39,7 +40,6 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->post('/movie/details', 'MovieController@getDetailsMovie');
     $router->post('/movie/move', 'MovieController@moveMovie');
     $router->post('/movie/refresh', 'MovieController@refresh');
-    $router->get('/movie/get', 'MovieController@getUserMovies');
     $router->get('/movie/popular', 'MovieController@getPopularMovies');
 
 });
