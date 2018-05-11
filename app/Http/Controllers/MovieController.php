@@ -48,20 +48,6 @@ class MovieController extends BaseController
     }
 
     /**
-     * Get user movies list
-     * @param Request $request
-     * @return string
-     */
-    public function getUserMovies(Request $request)
-    {
-        $util = new Utils();
-        $user = User::find($util->getUserId($request));
-        $movies = $user->movies;
-
-        return json_encode($movies);
-    }
-
-    /**
      * Get details of a movie
      * @param Request $request
      * @return string

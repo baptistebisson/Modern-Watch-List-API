@@ -40,6 +40,21 @@ class UserController extends BaseController
         return $movie;
     }
 
+    /**
+     * Get user movies list
+     * @param Request $request
+     * @return string
+     */
+    public function getUserMovies(Request $request)
+    {
+        $util = new Utils();
+        $user = new User();
+        $user = $user->find($util->getUserId($request));
+        $movies = $user->movies;
+
+        return json_encode($movies);
+    }
+
     public function test()
     {
         $user = new User();

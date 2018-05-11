@@ -127,7 +127,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             'genres' => $genreChart,
             'gross' => $gross,
             'budget' => $budget,
-            'day' => $dayChart
+            'days' => $dayChart
         );
 
         return $stats;
@@ -151,12 +151,12 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
 
     /**
      * Delete movie from user list
-     * @param Integer $movie_id
-     * @param String $type
-     * @param Integer $user_id
+     * @param int $movie_id
+     * @param string $type
+     * @param int $user_id
      * @return array
      */
-    public function deleteMovie(Integer $movie_id, String $type, Integer $user_id) {
+    public function deleteMovie(int $movie_id, string $type, int $user_id) {
         $response = new Response();
         
         if ($type == "movie") {
@@ -176,15 +176,16 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $response->get();
     }
 
+
     /**
      * Add a mark to the movie
-     * @param Integer $movie_id
-     * @param String $type
-     * @param Integer $mark
-     * @param Integer $user_id
+     * @param int $movie_id
+     * @param string  $type
+     * @param int $mark
+     * @param int $user_id
      * @return array
      */
-    public function addMark(Integer $movie_id, String $type, Integer $mark, Integer $user_id) {
+    public function addMark(int $movie_id, string $type, int $mark, int $user_id) {
         $response = new Response();
 
         if ($type == "movie") {
@@ -201,7 +202,9 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function movies() {
-        return $this->belongsToMany('App\Movie', 'movie_user', 'user_id', 'movie_id')->orderBy('position')->withPivot('date_added', 'rating', 'position');
+        return $this->belongsToMany('App\Movie', 'movie_user', 'user_id', 'movie_id')
+            ->orderBy('position', 'desc')
+            ->withPivot('date_added', 'rating', 'position');
     }
 
     /**
