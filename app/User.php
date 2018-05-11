@@ -134,18 +134,22 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function test() {
-        $movies = DB::table('movie_user')
-            ->where('user_id', 1)->get();
-
-        foreach ($movies as $movie) {
-            if ($movie->rating > 0) {
-                //DB::table('movie_user')->where('user_id', 1)->update(['rating' => $movie->rating + 1]);
-//                var_dump($movie->movie_id);
-//                var_dump($movie->rating);
-//                var_dump($movie->rating + 1);
+        $result = null;
+        $id = '131';
+        if (HistoryQueries::where('type_id', 'a131')->exists()) {
+            $result = DB::table('history_queries')->where('type_id', 'a'.$id)->first();
+            if (strtotime($result->updated_at) < strtotime('-10 minutes')) {
+                echo "resresrse";
+                $test = HistoryQueries::where('type_id', 'a131')->first();
+                $test->query = "jean eude";
+                $save = $test->save();
+                var_dump($save);
+//                DB::table('history_queries')
+//                    ->where('type_id', 'a'.$id)
+//                    ->update(['query' => 'test']);
             }
         }
-
+        //var_dump($result->query);
         return true;
     }
 
