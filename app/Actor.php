@@ -6,6 +6,7 @@ use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use DB;
 use App\Helpers\Curl;
+use Illuminate\Support\Facades\Log;
 
 class Actor extends Model
 {
@@ -133,7 +134,7 @@ class Actor extends Model
         $result = null;
 
         if  (HistoryQueries::where('type_id', 'a'.$id)->exists()) {
-            $data = HistoryQueries::where('type_id', 'a131')->first();
+            $data = HistoryQueries::where('type_id', 'a'.$id)->first();
 
             // Check if we need to update data
             if (strtotime($data->updated_at) < strtotime('-1 week')) {
@@ -143,6 +144,8 @@ class Actor extends Model
                 // Update data
                 $data->query = json_encode($result);
                 $data->save();
+
+                Log::debug('Class Actor caching data', $result);
 
                 $result = json_encode($result);
             } else {
