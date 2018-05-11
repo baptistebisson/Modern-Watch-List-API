@@ -83,6 +83,88 @@ class Actor extends Model
     }
 
     /**
+     * Get details of actor
+     * @param $id
+     * @return string
+     */
+    public function getDetails($id) {
+        $return = null;
+        $actor = DB::table('actors')->where('id', $id)->first();
+
+        $otherMovies = DB::table('actors')
+            ->join('movie_actor', 'actors.id', '=', 'movie_actor.actor_id')
+            ->join('movies', 'movie_actor.movie_id', '=', 'movies.id')
+            ->where('actors.id', $id)
+            ->select('movies.id', 'movies.title')
+            ->get();
+
+        $budget = DB::table('actors')
+            ->join('movie_actor', 'actors.id', '=', 'movie_actor.actor_id')
+            ->join('movies', 'movie_actor.movie_id', '=', 'movies.id')
+            ->where('actors.id', $id)
+            ->select('movies.id', 'movies.title', 'movies.budget')
+            ->orderBy('movies.budget', 'desc')
+            ->limit(1)
+            ->first();
+
+        $gross = DB::table('actors')
+            ->join('movie_actor', 'actors.id', '=', 'movie_actor.actor_id')
+            ->join('movies', 'movie_actor.movie_id', '=', 'movies.id')
+            ->where('actors.id', $id)
+            ->select('movies.id', 'movies.title', 'movies.gross')
+            ->orderBy('movies.gross', 'desc')
+            ->limit(1)
+            ->first();
+
+        $return['db_movies'] = $otherMovies;
+        $return['biggest_budget'] = $budget;
+        $return['biggest_gross'] = $gross;
+        $return['details'] = $actor;
+        return json_encode($return);
+    }
+
+
+    /**
+     * Get movie credits
+     * @param $id
+     * @return Helpers\JSON|null
+     */
+    public function getMovieCredits($id) {
+        $result = null;
+
+        if  (HistoryQueries::where('type_id', 'a'.$id)->exists()) {
+            $data = HistoryQueries::where('type_id', 'a131')->first();
+
+            // Check if we need to update data
+            if (strtotime($data->updated_at) < strtotime('-1 week')) {
+                $curl = new Curl();
+                $result = $curl->getData("https://api.themoviedb.org/3/person/$id/movie_credits?api_key=MOVIE_KEY&language=en-US");
+
+                // Update data
+                $data->query = json_encode($result);
+                $data->save();
+
+                $result = json_encode($result);
+            } else {
+                $result = $data->query;
+            }
+        } else {
+            $curl = new Curl();
+            $result = $curl->getData("https://api.themoviedb.org/3/person/$id/movie_credits?api_key=MOVIE_KEY&language=en-US");
+            $result = json_encode($result);
+
+            $history = new HistoryQueries([
+                'type_id' => 'a'.$id,
+                'query' => json_encode($result),
+            ]);
+
+            $history->save();
+        }
+
+        return $result;
+    }
+
+    /**
      * Save image to public folder
      * @param  String $img      Image url
      * @param  String $fullpath Path to save the picture
@@ -105,42 +187,6 @@ class Actor extends Model
             $write = 1;
         }
         return $write;
-    }
-
-    public function getDetails($id) {
-        $return = null;
-        $actor = DB::table('actors')->where('id', $id)->first();
-
-        $otherMovies = DB::table('actors')
-        ->join('movie_actor', 'actors.id', '=', 'movie_actor.actor_id')
-        ->join('movies', 'movie_actor.movie_id', '=', 'movies.id')
-        ->where('actors.id', $id)
-        ->select('movies.id', 'movies.title')
-        ->get();
-
-        $budget = DB::table('actors')
-        ->join('movie_actor', 'actors.id', '=', 'movie_actor.actor_id')
-        ->join('movies', 'movie_actor.movie_id', '=', 'movies.id')
-        ->where('actors.id', $id)
-        ->select('movies.id', 'movies.title', 'movies.budget')
-        ->orderBy('movies.budget', 'desc')
-        ->limit(1)
-        ->first();
-
-        $gross = DB::table('actors')
-        ->join('movie_actor', 'actors.id', '=', 'movie_actor.actor_id')
-        ->join('movies', 'movie_actor.movie_id', '=', 'movies.id')
-        ->where('actors.id', $id)
-        ->select('movies.id', 'movies.title', 'movies.gross')
-        ->orderBy('movies.gross', 'desc')
-        ->limit(1)
-        ->first();
-
-        $return['db_movies'] = $otherMovies;
-        $return['biggest_budget'] = $budget;
-        $return['biggest_gross'] = $gross;
-        $return['details'] = $actor;
-        return json_encode($return);
     }
 
     public function movies() {

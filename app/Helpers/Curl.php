@@ -1,6 +1,8 @@
 <?php
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Log;
+
 class Curl
 {
     protected $curl;
@@ -41,6 +43,8 @@ class Curl
         } else {
             $return = json_decode($response);
             if (isset($return->status_code)) {
+                Log::debug('Curl class request', (array)$url);
+                Log::debug('Curl class', (array)$return);
                 abort(404, 'API Problem');
             }
         }
