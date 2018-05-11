@@ -14,4 +14,11 @@ class ActorController extends BaseController
         $actor = $actor->getDetails($request->get('id'));
         return $actor;
     }
+
+    public function getMovieCredits(Request $request)
+    {
+        $actor = new Actor();
+        $actor = $actor->getMovieCredits($request->get('id'));
+        return $actor;
+    }
 }
