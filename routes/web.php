@@ -34,6 +34,7 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->get('/movie/get', 'UserController@getUserMovies');
 
     $router->post('/actor/details', 'ActorController@getDetails');
+    $router->get('/actor/credits', 'ActorController@getMovieCredits');
 
     $router->post('/movie/search', 'MovieController@searchMovie');
     $router->post('/movie/create', 'MovieController@createMovie');
