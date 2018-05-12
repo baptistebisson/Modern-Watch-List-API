@@ -31,6 +31,7 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->get('/user/stats', 'UserController@getStats');
     $router->post('/user/delete', 'UserController@deleteData');
     $router->post('/user/mark', 'UserController@addMark');
+    $router->post('/user/add', 'UserController@addToList');
     $router->get('/movie/get', 'UserController@getUserMovies');
 
     $router->post('/actor/details', 'ActorController@getDetails');

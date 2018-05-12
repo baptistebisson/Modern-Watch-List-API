@@ -13,10 +13,10 @@ class Response
         );
     }
     
-    public function error(array $error) {
+    public function error(bool $error, string  $message) {
         $this->response = array(
-            'error' => $error[0],
-            'message' => $error[1],
+            'error' => $error,
+            'message' => $message,
         );
     }
     

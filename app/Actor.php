@@ -142,10 +142,10 @@ class Actor extends Model
                 $result = $curl->getData("https://api.themoviedb.org/3/person/$id/movie_credits?api_key=MOVIE_KEY&language=en-US");
 
                 // Update data
-                $data->query = json_encode($result);
+                $data->query = json_encode($result, JSON_UNESCAPED_SLASHES);
                 $data->save();
 
-                Log::debug('Class Actor caching data', $result);
+                Log::debug('Class Actor caching data', array($result));
 
                 $result = json_encode($result);
             } else {
@@ -158,7 +158,7 @@ class Actor extends Model
 
             $history = new HistoryQueries([
                 'type_id' => 'a'.$id,
-                'query' => json_encode($result),
+                'query' => json_encode($result, JSON_UNESCAPED_SLASHES),
             ]);
 
             $history->save();

@@ -40,6 +40,17 @@ class UserController extends BaseController
         return $movie;
     }
 
+    public function addToList(Request $request) {
+        $util = new Utils();
+        $user = new User();
+        $response = $user->addToList(
+            $request->get('id'),
+            $request->get('type'),
+            $util->getUserId($request)
+        );
+        return $response;
+    }
+
     /**
      * Get user movies list
      * @param Request $request

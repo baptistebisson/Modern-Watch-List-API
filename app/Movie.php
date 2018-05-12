@@ -218,10 +218,10 @@ class Movie extends Model
                         }
                     }
                 }
-                $response->error([false, 'Movie will be added']);
+                $response->error(false, 'Movie will be added');
             } else {
                 if ($user_id == null) {
-                    $response->error([true, 'Movie already exist']);
+                    $response->error(true, 'Movie already exist');
                 } else {
                     $movie_id = DB::table('movies')->where('api_id', $id)->select('id')->first();
                     if (!DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie_id->id)->exists()) {
@@ -242,15 +242,15 @@ class Movie extends Model
                         ]);
                         $saved = $movieusers->save();
                         if ($saved) {
-                            $response->error([false, 'Movie added']);
+                            $response->error(false, 'Movie added');
                         }
                     } else {
-                        $response->error([true, 'You already have this movie']);
+                        $response->error(true, 'You already have this movie');
                     }
                 }
             }
         } else {
-            $response->error([true, 'Database problem']);
+            $response->error(true, 'Database problem');
         }
 
         return $response->get();
@@ -271,19 +271,17 @@ class Movie extends Model
      * @return array            Message
      */
     public function moveMovie($movies, $user_id) {
-        $return = array(
-            'error' => false,
-            'message' => 'Position updated',
-        );
+        $response = new Response();
+        $response->error(false, "Position updated");
 
         foreach ($movies as $key => $value) {
-            $update = DB::table('movie_user')
+            DB::table('movie_user')
             ->where('user_id', $user_id)
             ->where('movie_id', $value['id'])
             ->update(['position' => $value['position']]);
         }
         
-        return $return;
+        return $response->get();
     }
 
     /**

@@ -26,7 +26,7 @@ class MovieController extends BaseController
         $movie = new Movie();
 
         $request_title = $request->get('title');
-        $movie_to_find = str_replace(" ", "%20%", $request_title);
+        $movie_to_find = str_replace(" ", "%20", $request_title);
         if (strlen($movie_to_find) > 3) {
             $movies = $movie->findMovie($movie_to_find);
         }
@@ -55,21 +55,22 @@ class MovieController extends BaseController
     public function getDetailsMovie(Request $request)
     {
         $util = new Utils();
-        if (DB::table('movie_user')->where('movie_id', $request->get('id'))->where('user_id', $util->getUserId($request))->exists()) {
-            $rate = DB::table('movie_user')
-                ->where('movie_id', $request->get('id'))
-                ->where('user_id', $util->getUserId($request))
-                ->select('rating')->first();
+        $rate = DB::table('movie_user')
+            ->where('movie_id', $request->get('id'))
+            ->where('user_id', $util->getUserId($request))
+            ->select('rating')->first();
 
-            $movie = Movie::with('genres', 'actors', 'directors')
-                ->where('id', $request->get('id'))
-                ->first();
+        $movie = Movie::with('genres', 'actors', 'directors')
+            ->where('id', $request->get('id'))
+            ->first();
 
+        if ($rate) {
             $movie['user_rate'] = $rate->rating;
-            return json_encode($movie);
         } else {
-            abort(403, 'Unauthorized action.');
+            // This is a new movie
+            $movie['user_rate'] = 404;
         }
+        return json_encode($movie);
     }
 
     /**
@@ -94,7 +95,9 @@ class MovieController extends BaseController
         $movie = new Movie();
         $util = new Utils();
 
-        $return = $movie->upToDate($request->get('movies'), $util->getUserId($request));
+        $return = $movie->upToDate(
+            array_reverse($request->get('movies')),
+            $util->getUserId($request));
         return json_encode($return);
     }
 

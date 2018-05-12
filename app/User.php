@@ -2,21 +2,14 @@
 
 namespace App;
 
-use App\Helpers\Utils;
 use Illuminate\Auth\Authenticatable;
-use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
-use phpDocumentor\Reflection\Types\Integer;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use DB;
-use App\Movie;
-use App\Actor;
-use App\User;
 use App\movie_user;
-use App\Helpers\Crawler;
 use App\Helpers\Response;
 
 class User extends Model implements JWTSubject, AuthenticatableContract, AuthorizableContract
@@ -168,13 +161,13 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
                 $movie = DB::table('movies')->where('id', $movie_id)->first();
                 $delete = DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie->id)->delete();
                 if ($delete) {
-                    $response->error([false, 'Success']);
+                    $response->error(false, 'Success');
                 } else {
-                    $response->error([true, 'Can\'t delete movie']);
+                    $response->error(true, 'Can\'t delete movie');
                 }
 
             } else {
-                $response->error([true, 'Movie doesn\'t exist']);
+                $response->error(true, 'Movie doesn\'t exist');
             }
         }
         return $response->get();
@@ -198,7 +191,34 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             ->where('user_id', $user_id)
             ->update(['rating' => $mark]);
             if ($saved) {
-                $response->error([false, 'Mark added']);
+                $response->error(false, 'Mark added');
+            }
+        }
+
+        return $response->get();
+    }
+
+    public function addToList(int $movie_id, string $type, int $user_id) {
+        $response = new Response();
+
+        if ($type == "movie") {
+            $position = DB::table('movie_user')->where('user_id', $user_id)->orderBy('position', 'desc')->first();
+            if ($position) {
+                $position = $position->position;
+            } else {
+                $position = 0;
+            }
+
+            $movieUsers = new Movieusers([
+                'user_id' => $user_id,
+                'movie_id' => $movie_id,
+                'date_added' => date("Y/m/d-H:i:s"),
+                'rating' => 0,
+                'position' => $position + 1,
+            ]);
+            $saved = $movieUsers->save();
+            if ($saved) {
+                $response->error(false, 'Movie added');
             }
         }
 
