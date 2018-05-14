@@ -12,7 +12,7 @@ class Actor extends Model
 {
 
     protected $fillable = ['imdb_id','api_id','name','biography','place_of_birth',
-    'popularity','height','birth_date','death_date','gender','image_original', 'image_small'];
+    'popularity','height','birth_date','death_date','gender','image_original', 'image_small', 'image_api'];
     public $timestamps = false;
 
     public static function importActor($actorData)
@@ -44,13 +44,16 @@ class Actor extends Model
         $biography = isset($actorData->biography) ? $actorData->biography : null;
         $popularity = isset($actorData->popularity) ? $actorData->popularity : null;
 
+        // Format name for file
+        $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($actorData->title));
+
         if ($actorData->profile_path == null) {
             $no_picture = true;
             $image_original = 'no_picture.jpg';
             $image_small = 'no_picture.jpg';
         } else {
-            $image_original = str_replace(" ", "_", $actorData->name). '.jpg';
-            $image_small = str_replace(" ", "_", $actorData->name). '_small.jpg';
+            $image_original = $name_lower. '.jpg';
+            $image_small = $name_lower. '_small.jpg';
         }
 
         $actor = new Actor([
@@ -69,12 +72,12 @@ class Actor extends Model
         ]);
 
         if (!$no_picture) {
-            if (!file_exists('/var/www/api/public/img/a/'. str_replace(" ", "_", $actorData->name). '.jpg')) {
+            if (!file_exists('/var/www/api/public/img/a/'. $name_lower. '.jpg')) {
                 $util->save_image('https://image.tmdb.org/t/p/w185'. $actorData->profile_path,
-                    '/var/www/api/public/img/a/'. str_replace(" ", "_", $actorData->name). '_small.jpg');
+                    '/var/www/api/public/img/a/'. $name_lower. '_small.jpg');
 
                 $util->save_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path,
-                    '/var/www/api/public/img/a/'. str_replace(" ", "_", $actorData->name). '.jpg');
+                    '/var/www/api/public/img/a/'. $name_lower. '.jpg');
             }
         }
 
@@ -165,31 +168,6 @@ class Actor extends Model
         }
 
         return $result;
-    }
-
-    /**
-     * Save image to public folder
-     * @param  String $img      Image url
-     * @param  String $fullpath Path to save the picture
-     * @return Boolean          Success or not
-     */
-    private function save_image($img, $fullpath) {
-        $write = null;
-        $ch = curl_init ($img);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
-        $rawdata = curl_exec($ch);
-        curl_close ($ch);
-        if (!file_exists($fullpath)) {
-            $fp = fopen($fullpath,'x');
-            $write = fwrite($fp, $rawdata);
-            fclose($fp);
-    	}
-        if ($write !== null) {
-            $write = 1;
-        }
-        return $write;
     }
 
     public function movies() {

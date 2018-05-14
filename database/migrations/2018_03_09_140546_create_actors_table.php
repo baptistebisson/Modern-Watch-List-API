@@ -20,6 +20,7 @@ class CreateActorsTable extends Migration
             $table->string('name');
             $table->string('image_original')->nullable($value = true);
             $table->string('image_small')->nullable($value = true);
+            $table->string('image_api')->nullable($value = true);
             $table->string('biography')->nullable($value = true);
             $table->string('place_of_birth')->nullable($value = true);
             $table->double('popularity', 7, 1)->nullable($value = true);

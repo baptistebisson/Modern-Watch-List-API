@@ -24,6 +24,7 @@ class CreateMoviesTable extends Migration
             $table->string('backdrop_path')->nullable($value = true);
             $table->string('image_original')->nullable($value = true);
             $table->string('image_small')->nullable($value = true);
+            $table->string('image_api')->nullable($value = true);
             $table->string('description')->nullable($value = true);
             $table->integer('gross')->nullable($value = true);
             $table->integer('budget')->nullable($value = true);

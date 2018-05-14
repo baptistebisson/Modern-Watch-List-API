@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+include '../config/settings.php';
+
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -70,5 +72,9 @@ class Utils
             $write = 1;
         }
         return $write;
+    }
+
+    public function upload_image(string $imgUrl, array $options) {
+        \Cloudinary\Uploader::upload($imgUrl, $options);
     }
 }

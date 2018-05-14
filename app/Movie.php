@@ -22,7 +22,7 @@ class Movie extends Model
     protected $fillable = [
         'user_id','imdb_id','api_id','title','french_title','year','image','duration',
         'category','rating','description','gross','budget','country','filming_location','release_date',
-        'image_original', 'image_small', 'backdrop_path',
+        'image_original', 'image_small', 'image_api', 'backdrop_path',
     ];
 
     /**
@@ -91,6 +91,9 @@ class Movie extends Model
                     $backdrop_path = str_replace(" ", "_", $data->title). '.jpg';
                 }
 
+                // Format name for file
+                $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($data->title));
+
                 $movie = new Movie([
                     'imdb_id' => $imdb_id,
                     'api_id' => $data->id,
@@ -99,8 +102,8 @@ class Movie extends Model
                     'duration' => $duration,
                     'rating' => $rating,
                     'backdrop_path' => $backdrop_path,
-                    'image_original' => str_replace(" ", "_", $data->title). '.jpg',
-                    'image_small' => str_replace(" ", "_", $data->title). '_small.jpg',
+                    'image_original' => $name_lower. '.jpg',
+                    'image_small' => $name_lower. '_small.jpg',
                     'description' => $description,
                     'gross' => $gross,
                     'budget' => $budget,
@@ -112,16 +115,16 @@ class Movie extends Model
                 $saved = $movie->save();
 
                 //Check if image already exist
-                if (!file_exists('/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '.jpg')) {
+                if (!file_exists('/var/www/api/public/img/'. $name_lower. '.jpg')) {
                     $util->save_image('https://image.tmdb.org/t/p/w185'. $data->poster_path,
-                        '/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '_small.jpg');
+                        '/var/www/api/public/img/'. $name_lower. '_small.jpg');
 
                     $util->save_image('https://image.tmdb.org/t/p/original'. $data->poster_path,
-                        '/var/www/api/public/img/'. str_replace(" ", "_", $data->title). '.jpg');
+                        '/var/www/api/public/img/'. $name_lower. '.jpg');
 
                     if ($backdrop_path !== null) {
                         $util->save_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->backdrop_path,
-                            '/var/www/api/public/img/b/'. str_replace(" ", "_", $data->title). '.jpg');
+                            '/var/www/api/public/img/b/'. $name_lower. '.jpg');
                     }
                 }
 

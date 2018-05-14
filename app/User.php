@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\Helpers\Curl;
+use App\Helpers\Utils;
 use Illuminate\Auth\Authenticatable;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
@@ -127,22 +129,23 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function test() {
-        $result = null;
-        $id = '131';
-        if (HistoryQueries::where('type_id', 'a131')->exists()) {
-            $result = DB::table('history_queries')->where('type_id', 'a'.$id)->first();
-            if (strtotime($result->updated_at) < strtotime('-10 minutes')) {
-                echo "resresrse";
-                $test = HistoryQueries::where('type_id', 'a131')->first();
-                $test->query = "jean eude";
-                $save = $test->save();
-                var_dump($save);
-//                DB::table('history_queries')
-//                    ->where('type_id', 'a'.$id)
-//                    ->update(['query' => 'test']);
-            }
-        }
-        //var_dump($result->query);
+        $util = new Utils();
+        $actors = DB::table('directors')->get();
+//        foreach ($actors as $actor) {
+//            //$curl = new Curl();
+//            //$data = $curl->getData("https://api.themoviedb.org/3/movie/" . $movie->imdb_id . "?language=en-US&api_key=MOVIE_KEY");
+//            //$name = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($actor->name));
+//
+//            if ($actor->image_original !== 'no_picture.jpg') {
+//                $util->upload_image('https://api.baptiste-bisson.com/img/d/'. $actor->image_original, array(
+//                    'folder' => "movie/d",
+//                    'use_filename' => true,
+//                    'public_id' => $actor->image_api,
+//                ));
+//                //sleep(4);
+//            }
+//
+//        }
         return true;
     }
 
