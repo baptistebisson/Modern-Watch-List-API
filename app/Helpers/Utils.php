@@ -141,6 +141,7 @@ class Utils
 
             if ($height !== null) {
                 DB::table($table)->where('id', $id)->update(['height' => $height .'m']);
+                $response->error(false, 'Details added');
             } else {
                 $response->error(true, 'No details');
             }

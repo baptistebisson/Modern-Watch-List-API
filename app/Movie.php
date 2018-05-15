@@ -54,7 +54,7 @@ class Movie extends Model
                 $curl = new Curl;
                 $data = $curl->getData("https://api.themoviedb.org/3/movie/". $id ."?language=en-US&api_key=MOVIE_KEY");
                 $curlTMP = curl_init();
-                $url = 'http://www.imdb.com/title/'. $data->imdb_id .'/?ref_=ttfc_fc_tt';
+                $url = 'https://www.imdb.com/title/'. $data->imdb_id .'/?ref_=ttfc_fc_tt';
                 curl_setopt($curlTMP, CURLOPT_URL, $url);
                 curl_setopt($curlTMP, CURLOPT_RETURNTRANSFER, true);
                 //Only english page
@@ -113,6 +113,8 @@ class Movie extends Model
                 ]);
 
                 $movie->save();
+
+                $this->getMoreDetails($movie->id);
 
                 // Upload image to host
                 $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $data->poster_path, array(                    'folder' => "movie/d",
@@ -348,6 +350,42 @@ class Movie extends Model
         }
         Log::debug("Popular Movie execution time : " . $u->timeGet());
         Log::debug("Popular Movie total imported : " . $total);
+    }
+
+    /**
+     * Get more details about the movie
+     * @param int $id
+     * @return array
+     */
+    public function getMoreDetails(int $id) {
+        $response = new Response();
+        $curl = new Curl();
+        // Check if we already have more details
+        $movie = DB::table('movies')->where('id', $id)->first();
+        if ($movie->other_title == null) {
+
+            $data = $curl->getData('https://www.imdb.com/title/'. $movie->imdb_id .'/?ref_=ttfc_fc_tt');
+
+            preg_match('/Also Known As.*> (.*)/', $data, $match);
+            $other_title = isset($match[1]) ? $match[1] : null;
+
+            preg_match('/Filming Locations.*\n.*\n.*url\'>(.*)</', $data, $match);
+            $filming_location = isset($match[1]) ? $match[1] : null;
+
+            if ($other_title !== null && $filming_location !== null) {
+                DB::table('movies')->where('id', $id)->update([
+                    'other_title' => $other_title,
+                    'filming_location' => $filming_location,
+                ]);
+                $response->error(false, 'Details added');
+            } else {
+                $response->error(true, 'No details');
+            }
+        } else {
+            $response->error(true, 'No more details');
+        }
+
+        return $response->get();
     }
 
     /**
