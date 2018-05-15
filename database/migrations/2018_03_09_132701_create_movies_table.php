@@ -19,7 +19,7 @@ class CreateMoviesTable extends Migration
             $table->string('api_id')->unique();
             $table->string('title');
             $table->string('other_title')->nullable($value = true);
-            $table->string('duration')->nullable($value = true);
+            $table->integer('duration')->nullable($value = true);
             $table->string('rating')->nullable($value = true);
             $table->string('backdrop_path')->nullable($value = true);
             $table->string('image_original')->nullable($value = true);
