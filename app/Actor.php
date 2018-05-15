@@ -45,15 +45,19 @@ class Actor extends Model
         $popularity = isset($actorData->popularity) ? $actorData->popularity : null;
 
         // Format name for file
-        $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($actorData->title));
+        $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($actorData->name));
 
         if ($actorData->profile_path == null) {
-            $no_picture = true;
-            $image_original = 'no_picture.jpg';
-            $image_small = 'no_picture.jpg';
+            $image_api = 'no_picture.jpg';
         } else {
-            $image_original = $name_lower. '.jpg';
-            $image_small = $name_lower. '_small.jpg';
+            $image_api = $name_lower;
+            // Upload image to host
+            $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path, array(                    'folder' => "movie/d",
+                'use_filename' => true,
+                'public_id' => $name_lower,
+                ));
+
+            Log::debug('Actor.php upload image to host', $upload);
         }
 
         $actor = new Actor([
@@ -61,8 +65,9 @@ class Actor extends Model
             'api_id' => $actorData->id,
             'name' => $actorData->name,
             'biography' => $biography,
-            'image_original' => $image_original,
-            'image_small' => $image_small,
+            'image_original' => null,
+            'image_small' => null,
+            'image_api' => $image_api,
             'place_of_birth' => $place_of_birth,
             'popularity' => $popularity,
             'height' => $height,
@@ -70,16 +75,6 @@ class Actor extends Model
             'death_date' => $deathday,
             'gender' => $actorData->gender,
         ]);
-
-        if (!$no_picture) {
-            if (!file_exists('/var/www/api/public/img/a/'. $name_lower. '.jpg')) {
-                $util->save_image('https://image.tmdb.org/t/p/w185'. $actorData->profile_path,
-                    '/var/www/api/public/img/a/'. $name_lower. '_small.jpg');
-
-                $util->save_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path,
-                    '/var/www/api/public/img/a/'. $name_lower. '.jpg');
-            }
-        }
 
         $actor->save();
 

@@ -129,23 +129,6 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function test() {
-        $util = new Utils();
-        $actors = DB::table('directors')->get();
-//        foreach ($actors as $actor) {
-//            //$curl = new Curl();
-//            //$data = $curl->getData("https://api.themoviedb.org/3/movie/" . $movie->imdb_id . "?language=en-US&api_key=MOVIE_KEY");
-//            //$name = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($actor->name));
-//
-//            if ($actor->image_original !== 'no_picture.jpg') {
-//                $util->upload_image('https://api.baptiste-bisson.com/img/d/'. $actor->image_original, array(
-//                    'folder' => "movie/d",
-//                    'use_filename' => true,
-//                    'public_id' => $actor->image_api,
-//                ));
-//                //sleep(4);
-//            }
-//
-//        }
         return true;
     }
 

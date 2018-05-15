@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 include '../config/settings.php';
 
+use Cloudinary\Api\GeneralError;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -74,7 +75,51 @@ class Utils
         return $write;
     }
 
+
+    /**
+     * Upload image to host
+     * @param string $imgUrl
+     * @param array  $options
+     * @return mixed
+     */
     public function upload_image(string $imgUrl, array $options) {
-        \Cloudinary\Uploader::upload($imgUrl, $options);
+        $result = \Cloudinary\Uploader::upload($imgUrl, $options);
+        return $result;
+    }
+
+
+    /**
+     * Correct public id of image
+     */
+    public function rename_api_images() {
+        $api = new \Cloudinary\Api();
+        try {
+            $result = $api->resources([
+                'type' => 'upload',
+                'prefix' => 'movie/a',
+            ]);
+        } catch (GeneralError $e) {
+        }
+
+
+        while (!empty($result) && array_key_exists("next_cursor", $result)) {
+            foreach ($result['resources'] as $resource) {
+                if (preg_match('/.jpg/', $resource['public_id'])) {
+                    $new = str_replace('.jpg', '', $resource['public_id']);
+                    \Cloudinary\Uploader::rename($resource['public_id'], $new);
+                    //var_dump($result);
+                }
+            }
+
+            try {
+
+                $result = $api->resources([
+                    'type' => 'upload',
+                    'prefix' => 'movie/a',
+                    'next_cursor' => $result['next_cursor'],
+                ]);
+            } catch (GeneralError $e) {
+            }
+        }
     }
 }

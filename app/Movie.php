@@ -112,22 +112,15 @@ class Movie extends Model
                     'release_date' => $release_date,
                 ]);
 
-                $saved = $movie->save();
+                $movie->save();
 
-                //Check if image already exist
-                if (!file_exists('/var/www/api/public/img/'. $name_lower. '.jpg')) {
-                    $util->save_image('https://image.tmdb.org/t/p/w185'. $data->poster_path,
-                        '/var/www/api/public/img/'. $name_lower. '_small.jpg');
+                // Upload image to host
+                $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $data->poster_path, array(                    'folder' => "movie/d",
+                    'use_filename' => true,
+                    'public_id' => $name_lower,
+                ));
 
-                    $util->save_image('https://image.tmdb.org/t/p/original'. $data->poster_path,
-                        '/var/www/api/public/img/'. $name_lower. '.jpg');
-
-                    if ($backdrop_path !== null) {
-                        $util->save_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->backdrop_path,
-                            '/var/www/api/public/img/b/'. $name_lower. '.jpg');
-                    }
-                }
-
+                Log::debug('Movie.php upload image to host', $upload);
 
                 $position = DB::table('movie_user')->where('user_id', $user_id)->orderBy('position', 'desc')->first();
                 if ($position) {
@@ -146,7 +139,7 @@ class Movie extends Model
                         'rating' => 0,
                         'position' => $position + 1,
                     ]);
-                    $saved = $movieusers->save();
+                    $movieusers->save();
                 }
 
                 //Genres
