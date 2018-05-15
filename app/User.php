@@ -104,6 +104,36 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         ->groupBy('date')
         ->get();
 
+        $men = DB::table('movies')
+            ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
+            ->join('movie_actor', 'movies.id', '=', 'movie_actor.movie_id')
+            ->join('actors', 'movie_actor.actor_id', '=', 'actors.id')
+            ->where('user_id', '=', $user_id)
+            ->where('gender', 2)->count();
+
+        $woman = DB::table('movies')
+            ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
+            ->join('movie_actor', 'movies.id', '=', 'movie_actor.movie_id')
+            ->join('actors', 'movie_actor.actor_id', '=', 'actors.id')
+            ->where('user_id', '=', $user_id)
+            ->where('gender', 1)->count();
+
+        $durationMax = DB::table('movies')
+            ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
+            ->where('user_id', '=', $user_id)
+            ->where('duration', '!=', null)
+            ->orderBy('duration', 'desc')
+            ->limit(1)
+            ->first();
+
+        $durationMin = DB::table('movies')
+            ->join('movie_user', 'movies.id', '=', 'movie_user.movie_id')
+            ->where('user_id', '=', $user_id)
+            ->where('duration', '!=', null)
+            ->orderBy('duration', 'asc')
+            ->limit(1)
+            ->first();
+
         $genreChart = null;
         foreach ($genre as $key => $value) {
             $genreChart['data'][] = $value->total;
@@ -123,7 +153,15 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             'genres' => $genreChart,
             'gross' => $gross,
             'budget' => $budget,
-            'days' => $dayChart
+            'days' => $dayChart,
+            'parity' => [
+                'men' => $men,
+                'woman' => $woman
+            ],
+            'duration' => [
+                'max' => $durationMax,
+                'min' => $durationMin,
+            ]
         );
 
         return $stats;
