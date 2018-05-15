@@ -179,6 +179,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             ->where('user_id', $user_id)
             ->update(['rating' => $mark]);
             if ($saved) {
+                Log::debug('User.php add mark to movie '. $movie_id . ' for user: '. $user_id, array());
                 $response->error(false, 'Mark added');
             }
         }

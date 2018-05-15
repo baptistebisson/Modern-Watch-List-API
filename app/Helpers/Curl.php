@@ -12,17 +12,20 @@ class Curl
         $this->curl = curl_init();
     }
 
+
     /**
      * Get data from URL
-     * @param  String $url URL to get
-     * @return JSON        Return data
+     * @param string $url
+     * @return mixed|null
      */
-    public function getData($url)
+    public function getData(string $url)
     {
-        $url = str_replace('MOVIE_KEY', env('API_MOVIE_KEY'), $url);
-        $return = array(
-            "error" => false,
-        );
+        // If url is for themoviedb
+        if (strpos($url, 'MOVIE_KEY') !== false) {
+            $url = str_replace('MOVIE_KEY', env('API_MOVIE_KEY'), $url);
+        }
+
+        $return = null;
 
         curl_setopt_array($this->curl, array(
           CURLOPT_URL => $url,
@@ -39,12 +42,17 @@ class Curl
         $err = curl_error($this->curl);
 
         if ($err) {
-            $return["error"] = $err;
+            Log::debug('Curl.php error', array($err));
         } else {
-            $return = json_decode($response);
+            if ($this->isJson($response)) {
+                $return = json_decode($response);
+            } else {
+                $return = $response;
+            }
+
             if (isset($return->status_code)) {
-                Log::debug('Curl class request', (array)$url);
-                Log::debug('Curl class', (array)$return);
+                Log::debug('Curl.php request', (array)$url);
+                Log::debug('Curl.php', (array)$return);
                 abort(404, 'API Problem');
             }
         }
@@ -56,5 +64,10 @@ class Curl
     private function closeCurl()
     {
         curl_close($this->curl);
+    }
+
+    private function isJson($string) {
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
     }
 }

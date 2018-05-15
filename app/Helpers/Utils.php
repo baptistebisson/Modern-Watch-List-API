@@ -122,4 +122,33 @@ class Utils
             }
         }
     }
+
+    /**
+     * Get more details of a person
+     * @param string $table
+     * @param int    $id
+     * @return array
+     */
+    public function getPersonMoreDetails(string $table, int $id) {
+        $response = new Response();
+        $curl = new Curl();
+        // Check if we already have more details
+        $actor = DB::table($table)->where('id', $id)->first();
+        if ($actor->height == null) {
+            $data = $curl->getData('https://www.imdb.com/name/'. $actor->imdb_id .'/?ref_=tt_ov_st_sm');
+            preg_match('/Height:<\/h4>.*\n.*\((\d.\d+)/i', $data, $match);
+            $height = isset($match[1]) ? $match[1] : null;
+
+            if ($height !== null) {
+                DB::table($table)->where('id', $id)->update(['height' => $height .'m']);
+            } else {
+                $response->error(true, 'No details');
+            }
+        } else {
+            $response->error(true, 'No more details');
+        }
+
+        return $response->get();
+    }
+
 }

@@ -17,19 +17,6 @@ class Director extends Model
     public static function importDirector($directorData)
     {
         $util = new Utils();
-        $no_picture = false;
-        $curl = curl_init();
-        $url = 'http://www.imdb.com/name/'. $directorData->imdb_id .'/?ref_=tt_ov_st_sm';
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        //Only english page
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Accept-Language: en']);
-
-        $result = curl_exec($curl);
-        curl_close($curl);
-
-        preg_match('/Height:<\/h4>.*\n.*\((\d,\d+)/i', $result, $match);
-        $height = isset($match[1]) ? $match[1] : 0;
 
         $birthday = isset($directorData->birthday) ? $directorData->birthday : null;
         if ($birthday == 0) {

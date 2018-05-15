@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use DB;
 use App\Helpers\Curl;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\Response;
 
 class Actor extends Model
 {
@@ -18,7 +19,6 @@ class Actor extends Model
     public static function importActor($actorData)
     {
         $util = new Utils();
-        $no_picture = false;
         $curl = curl_init();
         $url = 'http://www.imdb.com/name/'. $actorData->imdb_id .'/?ref_=tt_ov_st_sm';
         curl_setopt($curl, CURLOPT_URL, $url);
