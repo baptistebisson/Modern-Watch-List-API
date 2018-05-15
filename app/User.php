@@ -5,6 +5,7 @@ namespace App;
 use App\Helpers\Curl;
 use App\Helpers\Utils;
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
@@ -147,6 +148,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
                 $movie = DB::table('movies')->where('id', $movie_id)->first();
                 $delete = DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie->id)->delete();
                 if ($delete) {
+                    Log::debug('User.php delete movie '. $movie_id . ' for user: '. $user_id, array());
                     $response->error(false, 'Success');
                 } else {
                     $response->error(true, 'Can\'t delete movie');
