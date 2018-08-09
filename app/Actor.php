@@ -45,17 +45,19 @@ class Actor extends Model
         $popularity = isset($actorData->popularity) ? $actorData->popularity : null;
 
         // Format name for file
-        $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($actorData->name));
+        $name_lower = $util->normalizeString($actorData->name);
 
         if ($actorData->profile_path == null) {
             $image_api = 'no_picture.jpg';
         } else {
-            $image_api = $name_lower;
             // Upload image to host
             $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path, array(                    'folder' => "movie/d",
                 'use_filename' => true,
-                'public_id' => $name_lower,
+                'public_id' => $actorData->imdb_id,
+                'folder' => 'movie/a',
                 ));
+
+            $image_api = $actorData->imdb_id . '.jpg';
 
             Log::debug('Actor.php upload image to host', $upload);
         }
@@ -140,7 +142,7 @@ class Actor extends Model
                 $result = $curl->getData("https://api.themoviedb.org/3/person/$id/movie_credits?api_key=MOVIE_KEY&language=en-US");
 
                 // Update data
-                $data->query = json_encode($result, JSON_UNESCAPED_SLASHES);
+                $data->query = $result;
                 $data->save();
 
                 Log::debug('Class Actor caching data', array($result));
@@ -156,7 +158,7 @@ class Actor extends Model
 
             $history = new HistoryQueries([
                 'type_id' => 'a'.$id,
-                'query' => json_encode($result, JSON_UNESCAPED_SLASHES),
+                'query' => $result,
             ]);
 
             $history->save();

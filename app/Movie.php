@@ -2,12 +2,15 @@
 
 namespace App;
 
+use App\Events\ExampleEvent;
+use App\Events\MoviedetailsEvent;
 use App\Helpers\Crawler;
 use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use App\Helpers\Curl;
 use DB;
 use App\Helpers\Response;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
 class Movie extends Model
@@ -53,22 +56,8 @@ class Movie extends Model
                 // dispatch(new MovieJob($user_id, $id));
                 $curl = new Curl;
                 $data = $curl->getData("https://api.themoviedb.org/3/movie/". $id ."?language=en-US&api_key=MOVIE_KEY");
-                $curlTMP = curl_init();
-                $url = 'https://www.imdb.com/title/'. $data->imdb_id .'/?ref_=ttfc_fc_tt';
-                curl_setopt($curlTMP, CURLOPT_URL, $url);
-                curl_setopt($curlTMP, CURLOPT_RETURNTRANSFER, true);
-                //Only english page
-                curl_setopt($curlTMP, CURLOPT_HTTPHEADER, ['Accept-Language: en']);
-                $result = curl_exec($curlTMP);
-                curl_close($curlTMP);
 
                 $title = isset($data->title) ? $data->title : null;
-
-                preg_match('/Also Known As.*> (.*)/', $result, $match);
-                $french_title = isset($match[1]) ? $match[1] : null;
-
-                preg_match('/Filming Locations.*\n.*\n.*url\'>(.*)</', $result, $match);
-                $filming_location = isset($match[1]) ? $match[1] : null;
 
                 $imdb_id = isset($data->imdb_id) ? $data->imdb_id : null;
 
@@ -92,23 +81,24 @@ class Movie extends Model
                 }
 
                 // Format name for file
-                $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($data->title));
+                $name_lower = $util->normalizeString($data->title);
 
                 $movie = new Movie([
                     'imdb_id' => $imdb_id,
                     'api_id' => $data->id,
                     'title' => $title,
-                    'other_title' => $french_title,
+                    'other_title' => null,
                     'duration' => $duration,
                     'rating' => $rating,
                     'backdrop_path' => $backdrop_path,
                     'image_original' => $name_lower. '.jpg',
                     'image_small' => $name_lower. '_small.jpg',
+                    'image_api' => $name_lower. '.jpg',
                     'description' => $description,
                     'gross' => $gross,
                     'budget' => $budget,
                     'country' => $country,
-                    'filming_location' => $filming_location,
+                    'filming_location' => null,
                     'release_date' => $release_date,
                 ]);
 
@@ -120,9 +110,17 @@ class Movie extends Model
                 $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $data->poster_path, array(                    'folder' => "movie/d",
                     'use_filename' => true,
                     'public_id' => $name_lower,
+                    'folder' => 'movie/p',
                 ));
 
                 Log::debug('Movie.php upload image to host', $upload);
+
+                // Upload cover
+                $upload = $util->upload_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
+                    'use_filename' => true,
+                    'public_id' => $name_lower,
+                    'folder' => 'movie/c',
+                ));
 
                 $position = DB::table('movie_user')->where('user_id', $user_id)->orderBy('position', 'desc')->first();
                 if ($position) {
@@ -218,11 +216,18 @@ class Movie extends Model
                 }
                 $response->error(false, 'Movie will be added');
             } else {
+                // Movie exist in database
                 if ($user_id == null) {
+                    // When we import popular movie user_id is set to null
+                    // We can stop here
                     $response->error(true, 'Movie already exist');
                 } else {
+                    // Add existing movie to user list
                     $movie_id = DB::table('movies')->where('api_id', $id)->select('id')->first();
+
+                    // If user doesn't have this movie
                     if (!DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie_id->id)->exists()) {
+                        // Get last position
                         $position = DB::table('movie_user')->where('user_id', $user_id)->orderBy('position', 'desc')->first();
                         if ($position) {
                             $position = $position->position;
@@ -239,6 +244,9 @@ class Movie extends Model
                             'position' => $position + 1,
                         ]);
                         $saved = $movieusers->save();
+                        Log::debug('Movie.php adding movie to user list', $util->toArray($movieusers));
+                        Event::dispatch(new ExampleEvent($movieusers));
+
                         if ($saved) {
                             $response->error(false, 'Movie added');
                         }
@@ -311,6 +319,18 @@ class Movie extends Model
                 break;
             }
         }
+
+//        $refresh = false;
+//
+//        $last_date = DB::table('users')->where('id', $user_id)->first();
+//        $last_date = $last_date->updated_at;
+//
+//        // If last date different from user cookie, refresh
+//        if ($last_date !== $date) {
+//            $refresh = true;
+//        }
+//
+//        return $refresh;
 
         return $refresh;
     }
@@ -409,4 +429,8 @@ class Movie extends Model
     public function directors() {
         return $this->belongsToMany('App\Director', 'movie_director', 'movie_id', 'director_id');
     }
+
+//    protected $dispatchesEvents = [
+//        'saving' => MoviedetailsEvent::class,
+//    ];
 }

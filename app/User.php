@@ -2,9 +2,11 @@
 
 namespace App;
 
+use App\Events\ExampleEvent;
 use App\Helpers\Curl;
 use App\Helpers\Utils;
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
@@ -168,6 +170,22 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     }
 
     public function test() {
+        $util = new Utils();
+        $actors = DB::table('movies')->get();
+        foreach ($actors as $actor) {
+            $curl = new Curl;
+            $data = $curl->getData("https://api.themoviedb.org/3/movie/". $actor->imdb_id ."?language=en-US&api_key=MOVIE_KEY");
+
+
+            $upload = $util->upload_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
+                'use_filename' => true,
+                'public_id' => $actor->imdb_id,
+                'folder' => 'movie/c',
+            ));
+            sleep(1);
+
+            //DB::table('movie')->where('id',  $actor->id)->update(['image_api' => $newName . '.jpg']);
+        }
         return true;
     }
 
@@ -227,6 +245,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
 
     public function addToList(int $movie_id, string $type, int $user_id) {
         $response = new Response();
+        $util = new Utils();
 
         if ($type == "movie") {
             $position = DB::table('movie_user')->where('user_id', $user_id)->orderBy('position', 'desc')->first();
@@ -245,7 +264,11 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             ]);
             $saved = $movieUsers->save();
             if ($saved) {
+                Log::debug('Movie.php adding movie to user list',$util->toArray($movieUsers));
+                Event::dispatch(new ExampleEvent($movieUsers));
                 $response->error(false, 'Movie added');
+            } else {
+                Log::debug('Movie.php error while adding movie to user list', $util->toArray($movieUsers));
             }
         }
 

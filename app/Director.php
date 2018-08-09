@@ -31,7 +31,7 @@ class Director extends Model
         $popularity = isset($directorData->popularity) ? $directorData->popularity : null;
 
         // Format name for file
-        $name_lower = preg_replace("/[\p{P}\p{Zs}]+/u", '_', strtolower($directorData->name));
+        $name_lower = $util->normalizeString($directorData->name);
 
         if ($directorData->profile_path == null) {
             $image_api = 'no_picture.jpg';
@@ -40,8 +40,11 @@ class Director extends Model
             // Upload image to host
             $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $directorData->profile_path, array(                    'folder' => "movie/d",
                 'use_filename' => true,
-                'public_id' => $name_lower,
+                'public_id' => $directorData->imdb_id,
+                'folder' => 'movie/d',
             ));
+
+            $image_api = $directorData->imdb_id . 'jpg';
 
             Log::debug('Director.php upload image to host', $upload);
         }

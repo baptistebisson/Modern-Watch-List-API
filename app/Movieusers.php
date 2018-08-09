@@ -2,8 +2,8 @@
 
 namespace App;
 
+use App\Events\ExampleEvent;
 use Illuminate\Database\Eloquent\Model;
-
 
 class Movieusers extends Model
 {
@@ -26,6 +26,10 @@ class Movieusers extends Model
      * @var array
      */
     protected $hidden = [
+    ];
+
+    protected $dispatchesEvents = [
+        'saving' => ExampleEvent::class,
     ];
 
     public function movies() {
