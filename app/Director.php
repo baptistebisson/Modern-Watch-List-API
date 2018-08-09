@@ -18,22 +18,22 @@ class Director extends Model
     {
         $util = new Utils();
 
-        $birthday = isset($directorData->birthday) ? $directorData->birthday : null;
-        if ($birthday == 0) {
+        $birthday = $directorData->birthday ?? null;
+        if ($birthday === 0) {
             $birthday = null;
         }
-        $deathday = isset($directorData->deathday) ? $directorData->deathday : null;
-        if ($deathday == 0) {
+        $deathday = $directorData->deathday ?? null;
+        if ($deathday === 0) {
             $deathday = null;
         }
-        $place_of_birth = isset($directorData->place_of_birth) ? $directorData->place_of_birth : null;
-        $biography = isset($directorData->biography) ? $directorData->biography : null;
-        $popularity = isset($directorData->popularity) ? $directorData->popularity : null;
+        $place_of_birth = $directorData->place_of_birth ?? null;
+        $biography = $directorData->biography ?? null;
+        $popularity = $directorData->popularity ?? null;
 
         // Format name for file
         $name_lower = $util->normalizeString($directorData->name);
 
-        if ($directorData->profile_path == null) {
+        if ($directorData->profile_path === null) {
             $image_api = 'no_picture.jpg';
         } else {
             $image_api = $name_lower;

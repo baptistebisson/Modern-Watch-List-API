@@ -44,7 +44,7 @@ class Movie extends Model
         $util = new Utils();
         $response = new Response();
 
-        if (substr($id, 0, 2) == "tt") {
+        if (strpos($id, 'tt') === 0) {
             $column = 'imdb_id';
         } else {
             $column = 'api_id';
@@ -55,29 +55,29 @@ class Movie extends Model
             if (!DB::table('movies')->where($column, $id)->exists()) {
                 // dispatch(new MovieJob($user_id, $id));
                 $curl = new Curl;
-                $data = $curl->getData("https://api.themoviedb.org/3/movie/". $id ."?language=en-US&api_key=MOVIE_KEY");
+                $data = $curl->getData('https://api.themoviedb.org/3/movie/' . $id . '?language=en-US&api_key=MOVIE_KEY');
 
-                $title = isset($data->title) ? $data->title : null;
+                $title = $data->title ?? null;
 
-                $imdb_id = isset($data->imdb_id) ? $data->imdb_id : null;
+                $imdb_id = $data->imdb_id ?? null;
 
-                $duration = isset($data->runtime) ? $data->runtime : null;
+                $duration = $data->runtime ?? null;
 
-                $rating = isset($data->vote_average) ? $data->vote_average : null;
+                $rating = $data->vote_average ?? null;
 
-                $country = isset($data->production_countries[0]->name) ? $data->production_countries[0]->name : null;
+                $country = $data->production_countries[0]->name ?? null;
 
-                $release_date = isset($data->release_date) ? $data->release_date : null;
+                $release_date = $data->release_date ?? null;
 
-                $description = isset($data->overview) ? $data->overview : null;
+                $description = $data->overview ?? null;
 
-                $gross = isset($data->revenue) ? $data->revenue : null;
+                $gross = $data->revenue ?? null;
 
-                $budget = isset($data->budget) ? $data->budget : null;
+                $budget = $data->budget ?? null;
 
                 $backdrop_path = null;
                 if ($data->backdrop_path !== null) {
-                    $backdrop_path = str_replace(" ", "_", $data->title). '.jpg';
+                    $backdrop_path = str_replace(' ', '_', $data->title). '.jpg';
                 }
 
                 // Format name for file
@@ -135,7 +135,7 @@ class Movie extends Model
                     $movieusers = new Movieusers([
                         'user_id' => $user_id,
                         'movie_id' => $movie->id,
-                        'date_added' => date("Y/m/d-H:i:s"),
+                        'date_added' => date('Y/m/d-H:i:s'),
                         'rating' => 0,
                         'position' => $position + 1,
                     ]);
@@ -164,7 +164,7 @@ class Movie extends Model
 
                 //Casting
                 $tmp = 0;
-                $cast = $curl->getData("https://api.themoviedb.org/3/movie/". $movie->imdb_id ."/credits?api_key=MOVIE_KEY");
+                $cast = $curl->getData('https://api.themoviedb.org/3/movie/' . $movie->imdb_id . '/credits?api_key=MOVIE_KEY');
                 //Foreach person into cast array
                 foreach ($cast->cast as $key => $value) {
                     //We only want 5 first peoples
@@ -173,7 +173,7 @@ class Movie extends Model
 
                         //If actor doesn't exist
                         if (!DB::table('actors')->where('name', $value->name)->exists() && !DB::table('actors')->where('api_id', $value->id)->exists()) {
-                            $actorData = $curl->getData("https://api.themoviedb.org/3/person/". $value->id ."?api_key=MOVIE_KEY&language=en-US");
+                            $actorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
                             $actor = new Actor();
                             $actor = $actor->importActor($actorData);
                         } else {
@@ -196,11 +196,11 @@ class Movie extends Model
                 $tmp = 0;
                 //Get directors
                 foreach ($cast->crew as $key => $value) {
-                    if ($value->job == "Producer") {
+                    if ($value->job === 'Producer') {
                         if ($tmp < 5) {
                             $curl = new Curl;
                             if (!DB::table('directors')->where('name', $value->name)->exists()) {
-                                $directorData = $curl->getData("https://api.themoviedb.org/3/person/". $value->id ."?api_key=MOVIE_KEY&language=en-US");
+                                $directorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
                                 $director = new Director();
                                 $director = $director->importDirector($directorData);
                             } else {
@@ -217,7 +217,7 @@ class Movie extends Model
                 $response->error(false, 'Movie will be added');
             } else {
                 // Movie exist in database
-                if ($user_id == null) {
+                if ($user_id === null) {
                     // When we import popular movie user_id is set to null
                     // We can stop here
                     $response->error(true, 'Movie already exist');
@@ -239,7 +239,7 @@ class Movie extends Model
                         $movieusers = new Movieusers([
                             'user_id' => $user_id,
                             'movie_id' => $movie_id->id,
-                            'date_added' => date("Y/m/d-H:i:s"),
+                            'date_added' => date('Y/m/d-H:i:s'),
                             'rating' => 0,
                             'position' => $position + 1,
                         ]);
@@ -278,7 +278,7 @@ class Movie extends Model
      */
     public function moveMovie($movies, $user_id) {
         $response = new Response();
-        $response->error(false, "Position updated");
+        $response->error(false, 'Position updated');
 
         foreach ($movies as $key => $value) {
             DB::table('movie_user')
@@ -343,7 +343,7 @@ class Movie extends Model
         $u = new Utils();
         $u->timeInit();
 
-        $c = new Crawler("https://www.imdb.com/chart/moviemeter?ref_=nv_mv_mpm_8");
+        $c = new Crawler('https://www.imdb.com/chart/moviemeter?ref_=nv_mv_mpm_8');
         $match = $c->find('/<tr>(.*?)<\/tr>/sm', true);
 
         // Reset column popular
@@ -351,7 +351,7 @@ class Movie extends Model
 
         foreach ($match[0] as $key => $value) {
             $id = $c->findIn($value, '(tt\d+)', false);
-            if (sizeof($id) > 0 && substr($id[0], 0, 2) === "tt") {
+            if (count($id) > 0 && strpos($id[0], 'tt') === 0) {
                 // Check if movie already exist
                 if (DB::table('movies')->where('imdb_id', $id[0])->exist()) {
                     // Update column
@@ -359,17 +359,17 @@ class Movie extends Model
                 } else {
                     // Create movie
                     $insert = Movie::getMovie($id[0]);
-                    if ($insert['error'] == false) {
+                    if ($insert['error'] === false) {
                         $total++;
                     }
-                    Log::debug("Popular Movie import movie", $insert);
+                    Log::debug('Popular Movie import movie', $insert);
                     // Avoid too many request at the same time
                     sleep(2);
                 }
             }
         }
-        Log::debug("Popular Movie execution time : " . $u->timeGet());
-        Log::debug("Popular Movie total imported : " . $total);
+        Log::debug('Popular Movie execution time : ' . $u->timeGet());
+        Log::debug('Popular Movie total imported : ' . $total);
     }
 
     /**
@@ -382,15 +382,15 @@ class Movie extends Model
         $curl = new Curl();
         // Check if we already have more details
         $movie = DB::table('movies')->where('id', $id)->first();
-        if ($movie->other_title == null) {
+        if ($movie->other_title === null) {
 
             $data = $curl->getData('https://www.imdb.com/title/'. $movie->imdb_id .'/?ref_=ttfc_fc_tt');
 
             preg_match('/Also Known As.*> (.*)/', $data, $match);
-            $other_title = isset($match[1]) ? $match[1] : null;
+            $other_title = $match[1] ?? null;
 
             preg_match('/Filming Locations.*\n.*\n.*url\'>(.*)</', $data, $match);
-            $filming_location = isset($match[1]) ? $match[1] : null;
+            $filming_location = $match[1] ?? null;
 
             if ($other_title !== null && $filming_location !== null) {
                 DB::table('movies')->where('id', $id)->update([

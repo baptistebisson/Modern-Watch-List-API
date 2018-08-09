@@ -30,24 +30,24 @@ class Actor extends Model
         curl_close($curl);
 
         preg_match('/Height:<\/h4>.*\n.*\((\d,\d+)/i', $result, $match);
-        $height = isset($match[1]) ? $match[1] : 0;
+        $height = $match[1] ?? 0;
 
-        $birthday = isset($actorData->birthday) ? $actorData->birthday : null;
-        if ($birthday == 0) {
+        $birthday = $actorData->birthday ?? null;
+        if ($birthday === 0) {
             $birthday = null;
         }
-        $deathday = isset($actorData->deathday) ? $actorData->deathday : null;
-        if ($deathday == 0) {
+        $deathday = $actorData->deathday ?? null;
+        if ($deathday === 0) {
             $deathday = null;
         }
-        $place_of_birth = isset($actorData->place_of_birth) ? $actorData->place_of_birth : null;
-        $biography = isset($actorData->biography) ? $actorData->biography : null;
-        $popularity = isset($actorData->popularity) ? $actorData->popularity : null;
+        $place_of_birth = $actorData->place_of_birth ?? null;
+        $biography = $actorData->biography ?? null;
+        $popularity = $actorData->popularity ?? null;
 
         // Format name for file
         $name_lower = $util->normalizeString($actorData->name);
 
-        if ($actorData->profile_path == null) {
+        if ($actorData->profile_path === null) {
             $image_api = 'no_picture.jpg';
         } else {
             // Upload image to host

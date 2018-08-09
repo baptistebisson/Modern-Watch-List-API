@@ -26,7 +26,7 @@ class MovieController extends BaseController
         $movie = new Movie();
 
         $request_title = $request->get('title');
-        $movie_to_find = str_replace(" ", "%20", $request_title);
+        $movie_to_find = str_replace(' ', '%20', $request_title);
         if (strlen($movie_to_find) > 3) {
             $movies = $movie->findMovie($movie_to_find);
         }

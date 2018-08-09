@@ -65,11 +65,4 @@ class UserController extends BaseController
 
         return json_encode($movies);
     }
-
-    public function test()
-    {
-        $user = new User();
-        $movie = $user->test();
-        return "";
-    }
 }

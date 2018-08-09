@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-include '../config/settings.php';
+include '../../config/settings.php';
 
 use Cloudinary\Api\GeneralError;
 use Illuminate\Http\Request;
@@ -102,7 +102,7 @@ class Utils
         }
 
 
-        while (!empty($result) && array_key_exists("next_cursor", $result)) {
+        while ($result !== null && array_key_exists('next_cursor', $result)) {
             foreach ($result['resources'] as $resource) {
                 if (preg_match('/.jpg/', $resource['public_id'])) {
                     $new = str_replace('.jpg', '', $resource['public_id']);
@@ -134,10 +134,10 @@ class Utils
         $curl = new Curl();
         // Check if we already have more details
         $actor = DB::table($table)->where('id', $id)->first();
-        if ($actor->height == null) {
+        if ($actor->height === null) {
             $data = $curl->getData('https://www.imdb.com/name/'. $actor->imdb_id .'/?ref_=tt_ov_st_sm');
             preg_match('/Height:<\/h4>.*\n.*\((\d.\d+)/i', $data, $match);
-            $height = isset($match[1]) ? $match[1] : null;
+            $height = $match[1] ?? null;
 
             if ($height !== null) {
                 DB::table($table)->where('id', $id)->update(['height' => $height .'m']);
@@ -166,9 +166,9 @@ class Utils
         $str = preg_replace('/[\r\n\t ]+/', ' ', $str);
         $str = preg_replace('/[\"\*\/\:\<\>\?\'\|]+/', ' ', $str);
         $str = strtolower($str);
-        $str = html_entity_decode( $str, ENT_QUOTES, "utf-8" );
-        $str = htmlentities($str, ENT_QUOTES, "utf-8");
-        $str = preg_replace("/(&)([a-z])([a-z]+;)/i", '$2', $str);
+        $str = html_entity_decode( $str, ENT_QUOTES, 'utf-8');
+        $str = htmlentities($str, ENT_QUOTES, 'utf-8');
+        $str = preg_replace('/(&)([a-z])([a-z]+;)/i', '$2', $str);
         $str = str_replace(' ', '-', $str);
         $str = rawurlencode($str);
         $str = str_replace('%', '-', $str);

@@ -94,9 +94,4 @@ class AuthController extends Controller
     {
         return response()->json(Auth::user());
     }
-
-    public function test()
-    {
-        return response()->json("cool");
-    }
 }

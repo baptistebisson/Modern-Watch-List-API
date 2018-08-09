@@ -174,7 +174,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         $actors = DB::table('movies')->get();
         foreach ($actors as $actor) {
             $curl = new Curl;
-            $data = $curl->getData("https://api.themoviedb.org/3/movie/". $actor->imdb_id ."?language=en-US&api_key=MOVIE_KEY");
+            $data = $curl->getData('https://api.themoviedb.org/3/movie/' . $actor->imdb_id . '?language=en-US&api_key=MOVIE_KEY');
 
 
             $upload = $util->upload_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
@@ -199,7 +199,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     public function deleteMovie(int $movie_id, string $type, int $user_id) {
         $response = new Response();
         
-        if ($type == "movie") {
+        if ($type === "movie") {
             if (DB::table('movies')->where('id', $movie_id)->exists()) {
                 $movie = DB::table('movies')->where('id', $movie_id)->first();
                 $delete = DB::table('movie_user')->where('user_id', $user_id)->where('movie_id', $movie->id)->delete();
@@ -229,7 +229,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     public function addMark(int $movie_id, string $type, int $mark, int $user_id) {
         $response = new Response();
 
-        if ($type == "movie") {
+        if ($type === 'movie') {
             $saved = DB::table('movie_user')
             ->where('movie_id', $movie_id)
             ->where('user_id', $user_id)
@@ -247,7 +247,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         $response = new Response();
         $util = new Utils();
 
-        if ($type == "movie") {
+        if ($type === 'movie') {
             $position = DB::table('movie_user')->where('user_id', $user_id)->orderBy('position', 'desc')->first();
             if ($position) {
                 $position = $position->position;
@@ -258,7 +258,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             $movieUsers = new Movieusers([
                 'user_id' => $user_id,
                 'movie_id' => $movie_id,
-                'date_added' => date("Y/m/d-H:i:s"),
+                'date_added' => date('Y/m/d-H:i:s'),
                 'rating' => 0,
                 'position' => $position + 1,
             ]);
