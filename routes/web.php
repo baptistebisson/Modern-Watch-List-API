@@ -28,16 +28,19 @@ $router->group(['middleware' => 'LoginMiddleware'], function($router)
 
 $router->group(['middleware' => 'auth:api'], function($router)
 {
+    // User Section
     $router->get('/user/stats', 'UserController@getStats');
     $router->post('/user/delete', 'UserController@deleteData');
     $router->post('/user/mark', 'UserController@addMark');
     $router->post('/user/add', 'UserController@addToList');
     $router->get('/movie/get', 'UserController@getUserMovies');
 
+    // Actor Section
     $router->post('/actor/details', 'ActorController@getDetails');
     $router->post('/actor/more', 'ActorController@getMoreDetails');
     $router->get('/actor/credits', 'ActorController@getMovieCredits');
 
+    // Movie Section
     $router->post('/movie/search', 'MovieController@searchMovie');
     $router->post('/movie/create', 'MovieController@createMovie');
     $router->post('/movie/details', 'MovieController@getDetailsMovie');
@@ -45,4 +48,6 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->post('/movie/refresh', 'MovieController@refresh');
     $router->get('/movie/popular', 'MovieController@getPopularMovies');
 
+    // TV Section
+    $router->get('/serie/search', 'TvController@searchSerie');
 });

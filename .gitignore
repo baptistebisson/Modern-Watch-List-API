@@ -5,3 +5,4 @@ Homestead.yaml
 .env
 vendor
 public/img/*
+worker.log
