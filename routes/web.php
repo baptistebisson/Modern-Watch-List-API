@@ -49,5 +49,5 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->get('/movie/popular', 'MovieController@getPopularMovies');
 
     // TV Section
-    $router->get('/serie/search', 'TvController@searchSerie');
+    $router->post('/tv/search', 'TvController@searchSerie');
 });
