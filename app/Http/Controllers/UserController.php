@@ -63,6 +63,29 @@ class UserController extends BaseController
         $user = $user->find($util->getUserId($request));
         $movies = $user->movies;
 
+        if ($movies === null) {
+            abort(204, 'No data');
+        }
+
         return json_encode($movies);
+    }
+
+    /**
+     * Get user tv shows list
+     * @param Request $request
+     * @return string
+     */
+    public function getUserShows(Request $request)
+    {
+        $util = new Utils();
+        $user = new User();
+        $user = $user->find($util->getUserId($request));
+        $tv = $user->shows;
+
+        if ($tv === null) {
+            abort(204, 'No data');
+        }
+
+        return json_encode($tv);
     }
 }

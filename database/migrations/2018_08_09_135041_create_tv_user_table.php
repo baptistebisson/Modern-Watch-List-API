@@ -19,9 +19,9 @@ class CreateTvUserTable extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->integer('tv_id')->unsigned();
             $table->foreign('tv_id')->references('id')->on('tv')->onDelete('cascade');
-            $table->dateTime('date_added')->useCurrent();
             $table->integer('rating');
             $table->integer('position');
+            $table->timestamps();
         });
     }
 

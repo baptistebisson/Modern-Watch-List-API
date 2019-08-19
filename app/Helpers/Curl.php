@@ -53,7 +53,7 @@ class Curl
             if (isset($return->status_code)) {
                 Log::debug('Curl.php request', (array)$url);
                 Log::debug('Curl.php', (array)$return);
-                abort(404, 'API Problem');
+                abort(404, 'API Problem with this url: '. $url);
             }
         }
 
@@ -68,6 +68,6 @@ class Curl
 
     private function isJson($string) {
         json_decode($string);
-        return (json_last_error() == JSON_ERROR_NONE);
+        return (json_last_error() === JSON_ERROR_NONE);
     }
 }

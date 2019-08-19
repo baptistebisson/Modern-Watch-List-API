@@ -9,8 +9,6 @@ class TvUser extends Model
 {
     protected $table = 'tv_user';
 
-    public $timestamps = false;
-
     /**
      * The attributes that are mass assignable.
      *

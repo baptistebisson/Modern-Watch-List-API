@@ -34,6 +34,7 @@ $router->group(['middleware' => 'auth:api'], function($router)
     $router->post('/user/mark', 'UserController@addMark');
     $router->post('/user/add', 'UserController@addToList');
     $router->get('/movie/get', 'UserController@getUserMovies');
+    $router->get('/tv/get', 'UserController@getUserShows');
 
     // Actor Section
     $router->post('/actor/details', 'ActorController@getDetails');
@@ -50,4 +51,7 @@ $router->group(['middleware' => 'auth:api'], function($router)
 
     // TV Section
     $router->post('/tv/search', 'TvController@searchSerie');
+    $router->post('/tv/details', 'TvController@getDetails');
+    $router->post('/tv/refresh', 'TvController@refresh');
+    $router->post('/tv/create', 'TvController@createShow');
 });

@@ -177,7 +177,7 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
             $data = $curl->getData('https://api.themoviedb.org/3/movie/' . $actor->imdb_id . '?language=en-US&api_key=MOVIE_KEY');
 
 
-            $upload = $util->upload_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
+            $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
                 'use_filename' => true,
                 'public_id' => $actor->imdb_id,
                 'folder' => 'movie/c',
@@ -279,6 +279,12 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
         return $this->belongsToMany('App\Movie', 'movie_user', 'user_id', 'movie_id')
             ->orderBy('position', 'desc')
             ->withPivot('date_added', 'rating', 'position');
+    }
+
+    public function shows() {
+        return $this->belongsToMany('App\Tv', 'tv_user', 'user_id', 'tv_id')
+            ->orderBy('position', 'desc')
+            ->withPivot('created_at', 'rating', 'position');
     }
 
     /**

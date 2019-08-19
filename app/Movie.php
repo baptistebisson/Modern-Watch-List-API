@@ -5,6 +5,7 @@ namespace App;
 use App\Events\ExampleEvent;
 use App\Events\MoviedetailsEvent;
 use App\Helpers\Crawler;
+use App\Helpers\Image;
 use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use App\Helpers\Curl;
@@ -42,6 +43,7 @@ class Movie extends Model
 
     public function getMovie($id, $user_id = null) {
         $util = new Utils();
+        $imageInstance = new Image();
         $response = new Response();
 
         if (strpos($id, 'tt') === 0) {
@@ -83,7 +85,7 @@ class Movie extends Model
                 // Format name for file
                 $name_lower = $util->normalizeString($data->title);
 
-                $movie = new Movie([
+                $movie = new self([
                     'imdb_id' => $imdb_id,
                     'api_id' => $data->id,
                     'title' => $title,
@@ -107,7 +109,7 @@ class Movie extends Model
                 $this->getMoreDetails($movie->id);
 
                 // Upload image to host
-                $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $data->poster_path, array(                    'folder' => "movie/d",
+                $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/original'. $data->poster_path, array(
                     'use_filename' => true,
                     'public_id' => $name_lower,
                     'folder' => 'movie/p',
@@ -116,7 +118,7 @@ class Movie extends Model
                 Log::debug('Movie.php upload image to host', $upload);
 
                 // Upload cover
-                $upload = $util->upload_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
+                $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(
                     'use_filename' => true,
                     'public_id' => $name_lower,
                     'folder' => 'movie/c',
@@ -132,88 +134,28 @@ class Movie extends Model
                 // If we have an user id
                 if ($user_id !== null) {
                     //Save to pivot table
-                    $movieusers = new Movieusers([
+                    $movieUser = new Movieusers([
                         'user_id' => $user_id,
                         'movie_id' => $movie->id,
                         'date_added' => date('Y/m/d-H:i:s'),
                         'rating' => 0,
                         'position' => $position + 1,
                     ]);
-                    $movieusers->save();
+                    $movieUser->save();
                 }
 
                 //Genres
-                foreach ($data->genres as $key => $value) {
-                    //Check if genre exist
-                    if (!DB::table('genres')->where('name', $value->name)->exists()) {
-                        $genre = new Genre();
-                        $genre->name = $value->name;
-                        $genre->save();
-                    } else {
-                        //If exist we need to get it
-                        $genre = DB::table('genres')->where('name', $value->name)->first();
-                    }
-                    $moviesgenres = new MovieGenre([
-                        'genre_id' => $genre->id,
-                        'movie_id' => $movie->id,
-                    ]);
-                    $moviesgenres->save();
-                }
+                $util->addGenre($data->genres, 'movie', $movie->id);
 
                 $curl = new Curl;
 
-                //Casting
-                $tmp = 0;
+                // Casting
                 $cast = $curl->getData('https://api.themoviedb.org/3/movie/' . $movie->imdb_id . '/credits?api_key=MOVIE_KEY');
-                //Foreach person into cast array
-                foreach ($cast->cast as $key => $value) {
-                    //We only want 5 first peoples
-                    if ($tmp < 5) {
-                        $curl = new Curl;
+                $util->addCasting($cast->cast, 'movie', $movie->id, 5);
 
-                        //If actor doesn't exist
-                        if (!DB::table('actors')->where('name', $value->name)->exists() && !DB::table('actors')->where('api_id', $value->id)->exists()) {
-                            $actorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
-                            $actor = new Actor();
-                            $actor = $actor->importActor($actorData);
-                        } else {
-                            $actor = DB::table('actors')->where('name', $value->name)->first();
-                        }
+                // Directors
+                $util->addDirector($cast->crew, 'movie', $movie->imdb_id, 5);
 
-                        $moviesactors = new MovieActor([
-                            'actor_id' => $actor->id,
-                            'movie_id' => $movie->id,
-                            'name' => $value->character,
-                        ]);
-                        $moviesactors->save();
-                        $tmp++;
-                    } else {
-                        //Stop iteration if reach 5
-                        break;
-                    }
-                }
-
-                $tmp = 0;
-                //Get directors
-                foreach ($cast->crew as $key => $value) {
-                    if ($value->job === 'Producer') {
-                        if ($tmp < 5) {
-                            $curl = new Curl;
-                            if (!DB::table('directors')->where('name', $value->name)->exists()) {
-                                $directorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
-                                $director = new Director();
-                                $director = $director->importDirector($directorData);
-                            } else {
-                                $director = DB::table('directors')->where('name', $value->name)->first();
-                            }
-                            $moviesdirectors = new MovieDirector([
-                                'director_id' => $director->id,
-                                'movie_id' => $movie->id,
-                            ]);
-                            $moviesdirectors->save();
-                        }
-                    }
-                }
                 $response->error(false, 'Movie will be added');
             } else {
                 // Movie exist in database
@@ -236,16 +178,16 @@ class Movie extends Model
                         }
 
                         //Save to pivot table
-                        $movieusers = new Movieusers([
+                        $movieUser = new Movieusers([
                             'user_id' => $user_id,
                             'movie_id' => $movie_id->id,
                             'date_added' => date('Y/m/d-H:i:s'),
                             'rating' => 0,
                             'position' => $position + 1,
                         ]);
-                        $saved = $movieusers->save();
+                        $saved = $movieUser->save();
                         Log::debug('Movie.php adding movie to user list', $util->toArray($movieusers));
-                        Event::dispatch(new ExampleEvent($movieusers));
+                        Event::dispatch(new ExampleEvent($movieUser));
 
                         if ($saved) {
                             $response->error(false, 'Movie added');
@@ -351,7 +293,7 @@ class Movie extends Model
 
         foreach ($match[0] as $key => $value) {
             $id = $c->findIn($value, '(tt\d+)', false);
-            if (count($id) > 0 && strpos($id[0], 'tt') === 0) {
+            if (\count($id) > 0 && strpos($id[0], 'tt') === 0) {
                 // Check if movie already exist
                 if (DB::table('movies')->where('imdb_id', $id[0])->exist()) {
                     // Update column

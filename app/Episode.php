@@ -5,10 +5,8 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 
 
-class TvGenre extends Model
+class Episode extends Model
 {
-    protected $table = 'tv_genre';
-    public $timestamps = false;
 
     /**
      * The attributes that are mass assignable.
@@ -16,7 +14,8 @@ class TvGenre extends Model
      * @var array
      */
     protected $fillable = [
-        'genre_id','tv_id',
+        'api_id','season_id','episode_number','title','description',
+        'release_date','popular','show_id','still_path'
     ];
 
     /**

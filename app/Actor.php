@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\Image;
 use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use DB;
@@ -19,6 +20,7 @@ class Actor extends Model
     public static function importActor($actorData)
     {
         $util = new Utils();
+        $imageInstance = new Image();
         $curl = curl_init();
         $url = 'http://www.imdb.com/name/'. $actorData->imdb_id .'/?ref_=tt_ov_st_sm';
         curl_setopt($curl, CURLOPT_URL, $url);
@@ -51,7 +53,7 @@ class Actor extends Model
             $image_api = 'no_picture.jpg';
         } else {
             // Upload image to host
-            $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $actorData->profile_path, array(                    'folder' => "movie/d",
+            $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/original'. $actorData->profile_path, array(
                 'use_filename' => true,
                 'public_id' => $actorData->imdb_id,
                 'folder' => 'movie/a',
@@ -62,7 +64,7 @@ class Actor extends Model
             Log::debug('Actor.php upload image to host', $upload);
         }
 
-        $actor = new Actor([
+        $actor = new self([
             'imdb_id' => $actorData->imdb_id,
             'api_id' => $actorData->id,
             'name' => $actorData->name,

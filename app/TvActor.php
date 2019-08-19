@@ -5,9 +5,9 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 
 
-class TvGenre extends Model
+class TvActor extends Model
 {
-    protected $table = 'tv_genre';
+    protected $table = 'tv_actor';
     public $timestamps = false;
 
     /**
@@ -16,7 +16,7 @@ class TvGenre extends Model
      * @var array
      */
     protected $fillable = [
-        'genre_id','tv_id',
+        'actor_id','tv_id','name',
     ];
 
     /**

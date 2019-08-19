@@ -3,24 +3,29 @@
 namespace App;
 
 
+use App\Helpers\Image;
+use App\Helpers\Response;
+use App\Jobs\GetSeasonsJob;
 use Illuminate\Support\Facades\Event;
 use App\Helpers\Curl;
 use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use TvUser;
 
 class Tv extends Model
 {
+    protected $table = 'tv';
+
     protected $fillable = [
-        'api_id','title','homepage','other_title','duration','rating','backdrop_path','gross','budget',
+        'api_id','title','status','homepage','other_title','duration','first_air_date',
+        'rating','backdrop_path','gross','budget','last_air_date','duration','network',
         'country','filming_location','release_date', 'description', 'popular'
     ];
 
     public function getShow($id, $user_id = null) {
         $util = new Utils();
+        $imageInstance = new Image();
         $response = new Response();
 
         if (!isset($data->status_code)) {
@@ -29,15 +34,19 @@ class Tv extends Model
                 $curl = new Curl;
                 $data = $curl->getData('https://api.themoviedb.org/3/tv/' . $id . '?language=en-US&api_key=MOVIE_KEY');
 
-                $title = $data->title ?? null;
+                $title = $data->name ?? null;
                 $homepage = $data->homepage ?? null;
+                $duration = $data->episode_run_time[0] ?? null;
                 $backdrop_path = $data->backdrop_path ?? null;
                 $rating = $data->vote_average ?? null;
                 $first_air_date = $data->first_air_date ?? null;
                 $last_air_date = $data->last_air_date;
                 $description = $data->overview ?? null;
+                $status = $data->status ?? null;
+                $network = $data->networks[0]->name ?? null;
+                $country = $data->origin_country[0] ?? null;
 
-                $tv = new Tv([
+                $tv = new self([
                     'api_id' => $data->id,
                     'title' => $title,
                     'other_title' => null,
@@ -45,18 +54,21 @@ class Tv extends Model
                     'rating' => $rating,
                     'backdrop_path' => $backdrop_path,
                     'description' => $description,
+                    'duration' => $duration,
+                    'network' => $network,
                     'gross' => null,
                     'budget' => null,
-                    'country' => null,
+                    'country' => $country,
                     'filming_location' => null,
                     'first_air_date' => $first_air_date,
-                    'last_air_date' => $last_air_date
+                    'last_air_date' => $last_air_date,
+                    'status', $status
                 ]);
 
                 $tv->save();
 
                 // Upload image to host
-                $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $data->poster_path, array(                    'folder' => "movie/d",
+                $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/original'. $data->poster_path, array(
                     'use_filename' => true,
                     'public_id' => $data->id,
                     'folder' => 'tv/p',
@@ -65,7 +77,7 @@ class Tv extends Model
                 Log::debug('Tv.php upload image to host', $upload);
 
                 // Upload cover
-                $upload = $util->upload_image('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(                    'folder' => "movie/d",
+                $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/w1400_and_h450_face'. $data->poster_path, array(
                     'use_filename' => true,
                     'public_id' => $data->id,
                     'folder' => 'tv/c',
@@ -80,6 +92,9 @@ class Tv extends Model
                     $position = 0;
                 }
 
+                // Call job for seasons and episodes
+                dispatch(new GetSeasonsJob($tv->id, $user_id, $data->seasons, $data->id));
+
                 // If we have an user id
                 if ($user_id !== null) {
                     //Save to pivot table
@@ -93,77 +108,18 @@ class Tv extends Model
                 }
 
                 //Genres
-                foreach ($data->genres as $key => $value) {
-                    //Check if genre exist
-                    if (!DB::table('genres')->where('name', $value->name)->exists()) {
-                        $genre = new Genre();
-                        $genre->name = $value->name;
-                        $genre->save();
-                    } else {
-                        //If exist we need to get it
-                        $genre = DB::table('genres')->where('name', $value->name)->first();
-                    }
-                    $tvGenre = new TvGenre([
-                        'genre_id' => $genre->id,
-                        'tv_id' => $tv->id,
-                    ]);
-                    $tvGenre->save();
-                }
+                $util->addGenre($data->genres,'tv', $tv->id);
 
                 $curl = new Curl;
 
                 //Casting
-                $tmp = 0;
-                $cast = $curl->getData('https://api.themoviedb.org/3/tv/' . $tv->imdb_id . '/credits?api_key=MOVIE_KEY');
-                //Foreach person into cast array
-                foreach ($cast->cast as $key => $value) {
-                    //We only want 5 first peoples
-                    if ($tmp < 5) {
-                        $curl = new Curl;
-
-                        //If actor doesn't exist
-                        if (!DB::table('actors')->where('name', $value->name)->exists() && !DB::table('actors')->where('api_id', $value->id)->exists()) {
-                            $actorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
-                            $actor = new Actor();
-                            $actor = $actor->importActor($actorData);
-                        } else {
-                            $actor = DB::table('actors')->where('name', $value->name)->first();
-                        }
-
-                        $tvActor = new MovieActor([
-                            'actor_id' => $actor->id,
-                            'tv_id' => $tv->id,
-                            'name' => $value->character,
-                        ]);
-                        $tvActor->save();
-                        $tmp++;
-                    } else {
-                        //Stop iteration if reach 5
-                        break;
-                    }
-                }
+                $cast = $curl->getData('https://api.themoviedb.org/3/tv/' . $tv->api_id . '/credits?api_key=MOVIE_KEY');
+                $util->addCasting($cast->cast, 'tv', $tv->id, 15);
 
                 $tmp = 0;
-                //Get directors
-                foreach ($cast->crew as $key => $value) {
-                    if ($value->job === 'Producer') {
-                        if ($tmp < 5) {
-                            $curl = new Curl;
-                            if (!DB::table('directors')->where('name', $value->name)->exists()) {
-                                $directorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
-                                $director = new Director();
-                                $director = $director->importDirector($directorData);
-                            } else {
-                                $director = DB::table('directors')->where('name', $value->name)->first();
-                            }
-                            $tvDirector = new TvDirector([
-                                'director_id' => $director->id,
-                                'tv_id' => $tv->id,
-                            ]);
-                            $tvDirector->save();
-                        }
-                    }
-                }
+                // Directors
+                $util->addDirector($cast->crew, 'tv', $tv->api_id, 5);
+
                 $response->error(false, 'Tv show will be added');
             } else {
                 // Show exist in database
@@ -188,7 +144,7 @@ class Tv extends Model
                         //Save to pivot table
                         $tvUser = new TvUser([
                             'user_id' => $user_id,
-                            'movie_id' => $tv_id->id,
+                            'tv_id' => $tv_id->id,
                             'rating' => 0,
                             'position' => $position + 1,
                         ]);
@@ -217,5 +173,50 @@ class Tv extends Model
         $result = $curl->getData("https://api.themoviedb.org/3/search/tv?api_key=MOVIE_KEY&language=en-US&query=$title&page=1&include_adult=false");
 
         return $result;
+    }
+
+    /**
+     * Check if user tv shows is up to date
+     * @param  array    $tv    List of tv_id and tv_position
+     * @param  int      $user_id   User id
+     * @return boolean             Response
+     */
+    public function upToDate($tv, $user_id) {
+        $refresh = false;
+        $bdd = DB::table('tv_user')
+            ->where('user_id', $user_id)
+            ->orderBy('position')
+            ->get();
+
+        foreach ($bdd as $key => $value) {
+            //For each tv shows in bdd and from request
+            //Check if there is a difference
+            if (!isset($tv[$key]) || $value->tv_id !== $tv[$key]['id'] || $value->position !== $tv[$key]['position']) {
+                $refresh = true;
+                break;
+            }
+        }
+        foreach ($tv as $key => $value) {
+            //For each tv shows in bdd and from request
+            //Check if there is a difference
+            if (!isset($bdd[$key]) || $value['id'] !== $bdd[$key]->tv_id || $value['position'] !== $bdd[$key]->position) {
+                $refresh = true;
+                break;
+            }
+        }
+
+        return $refresh;
+    }
+
+    public function genres() {
+        return $this->belongsToMany('App\Genre', 'tv_genre', 'tv_id', 'genre_id');
+    }
+
+    public function actors() {
+        return $this->belongsToMany('App\Actor', 'tv_actor', 'tv_id', 'actor_id')->withPivot('name');
+    }
+
+    public function directors() {
+        return $this->belongsToMany('App\Director', 'tv_director', 'tv_id', 'director_id');
     }
 }

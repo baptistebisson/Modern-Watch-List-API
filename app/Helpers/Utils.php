@@ -2,10 +2,19 @@
 
 namespace App\Helpers;
 
-include '../../config/settings.php';
-
+use App\Actor;
+use App\Director;
+use App\Genre;
+use App\MovieActor;
+use App\MovieDirector;
+use App\MovieGenre;
+use App\TvActor;
+use App\TvDirector;
+use App\TvGenre;
 use Cloudinary\Api\GeneralError;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class Utils
@@ -75,23 +84,11 @@ class Utils
         return $write;
     }
 
-
-    /**
-     * Upload image to host
-     * @param string $imgUrl
-     * @param array  $options
-     * @return mixed
-     */
-    public function upload_image(string $imgUrl, array $options) {
-        $result = \Cloudinary\Uploader::upload($imgUrl, $options);
-        return $result;
-    }
-
-
     /**
      * Correct public id of image
      */
-    public function rename_api_images() {
+    public function rename_api_images(): void
+    {
         $api = new \Cloudinary\Api();
         try {
             $result = $api->resources([
@@ -99,8 +96,8 @@ class Utils
                 'prefix' => 'movie/a',
             ]);
         } catch (GeneralError $e) {
-        }
 
+        }
 
         while ($result !== null && array_key_exists('next_cursor', $result)) {
             foreach ($result['resources'] as $resource) {
@@ -129,7 +126,8 @@ class Utils
      * @param int    $id
      * @return array
      */
-    public function getPersonMoreDetails(string $table, int $id) {
+    public function getPersonMoreDetails(string $table, int $id): array
+    {
         $response = new Response();
         $curl = new Curl();
         // Check if we already have more details
@@ -175,4 +173,125 @@ class Utils
         return $str;
     }
 
+    /**
+     * Create or add genre to movie/tv show
+     * @param $genres
+     * @param $class
+     * @param $idShow
+     */
+    public function addGenre($genres, $class, $idShow): void
+    {
+        foreach ($genres as $key => $value) {
+            //Check if genre exist
+            if (!DB::table('genres')->where('name', $value->name)->exists()) {
+                $genre = new Genre();
+                $genre->name = $value->name;
+                $genre->save();
+            } else {
+                //If exist we need to get it
+                $genre = DB::table('genres')->where('name', $value->name)->first();
+            }
+
+            // Save genre for movie/tv show
+            if ($class === 'movie') {
+                $moviesGenre = new MovieGenre([
+                    'genre_id' => $genre->id,
+                    'movie_id' => $idShow,
+                ]);
+                $moviesGenre->save();
+            } else {
+                $tvGenre = new TvGenre([
+                    'genre_id' => $genre->id,
+                    'tv_id' => $idShow,
+                ]);
+                $tvGenre->save();
+            }
+        }
+    }
+
+    /**
+     * Add casting
+     * @param $casting
+     * @param $class
+     * @param $idShow
+     * @param $limit
+     */
+    public function addCasting($casting, $class, $idShow, $limit): void
+    {
+        $tmp = 0;
+        foreach ($casting as $key => $value) {
+            if ($tmp < $limit) {
+                $curl = new Curl;
+
+                //If actor doesn't exist
+                if (!DB::table('actors')->where('name', $value->name)->exists() && !DB::table('actors')->where('api_id', $value->id)->exists()) {
+                    $actorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
+                    $actor = new Actor();
+                    $actor = $actor->importActor($actorData);
+                } else {
+                    $actor = DB::table('actors')->where('name', $value->name)->first();
+                }
+
+                if ($class === 'movie') {
+                    $movieActor = new MovieActor([
+                        'actor_id' => $actor->id,
+                        'movie_id' => $idShow,
+                        'name' => $value->character,
+                    ]);
+                    $movieActor->save();
+                } else {
+                    $tvActor = new TvActor([
+                        'actor_id' => $actor->id,
+                        'tv_id' => $idShow,
+                        'name' => $value->character,
+                    ]);
+                    $tvActor->save();
+                }
+
+                $tmp++;
+            } else {
+                //Stop iteration if reach limit
+                break;
+            }
+        }
+    }
+
+    /**
+     * Add directors
+     * @param $directors
+     * @param $class
+     * @param $idShow
+     * @param $limit
+     */
+    public function addDirector($directors, $class, $idShow, $limit): void
+    {
+        $tmp = 0;
+        //Get directors
+        foreach ($directors as $key => $value) {
+            if ($value->job === 'Producer' && $tmp < $limit) {
+                $curl = new Curl;
+                if (!DB::table('directors')->where('name', $value->name)->exists()) {
+                    $directorData = $curl->getData('https://api.themoviedb.org/3/person/' . $value->id . '?api_key=MOVIE_KEY&language=en-US');
+                    $director = new Director();
+                    $director = $director->importDirector($directorData);
+                } else {
+                    $director = DB::table('directors')->where('name', $value->name)->first();
+                }
+
+                if ($class === 'movie') {
+                    $movieDirector = new MovieDirector([
+                        'director_id' => $director->id,
+                        'movie_id' => $idShow,
+                    ]);
+                    $movieDirector->save();
+                } else {
+                    $tvDirector = new TvDirector([
+                        'director_id' => $director->id,
+                        'movie_id' => $idShow,
+                    ]);
+                    $tvDirector->save();
+                }
+            }
+        }
+    }
 }

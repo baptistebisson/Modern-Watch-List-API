@@ -6,3 +6,4 @@ Homestead.yaml
 vendor
 public/img/*
 worker.log
+node_modules

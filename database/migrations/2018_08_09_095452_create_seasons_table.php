@@ -18,11 +18,13 @@ class CreateSeasonsTable extends Migration
             $table->string('api_id')->unique();
             $table->integer('tv_id')->unsigned();
             $table->foreign('tv_id')->references('id')->on('tv')->onDelete('cascade');
+            $table->integer('episode_count');
+            $table->integer('season_number');
             $table->string('title');
-            $table->string('rating')->nullable($value = true);
-            $table->string('description')->nullable($value = true);
+            $table->longText('description')->nullable($value = true);
             $table->date('release_date')->nullable($value = true);
-            $table->boolean('popular')->default(false);
+            $table->string('poster_path');
+            $table->timestamps();
         });
     }
 

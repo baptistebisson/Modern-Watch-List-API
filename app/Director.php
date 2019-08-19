@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\Image;
 use App\Helpers\Utils;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -14,9 +15,10 @@ class Director extends Model
     'height','birth_date','death_date','gender','image_original', 'image_small', 'image_api'];
     public $timestamps = false;
 
-    public static function importDirector($directorData)
+    public static function importDirector($directorData): Director
     {
         $util = new Utils();
+        $imageInstance = new Image();
 
         $birthday = $directorData->birthday ?? null;
         if ($birthday === 0) {
@@ -38,10 +40,10 @@ class Director extends Model
         } else {
             $image_api = $name_lower;
             // Upload image to host
-            $upload = $util->upload_image('https://image.tmdb.org/t/p/original'. $directorData->profile_path, array(                    'folder' => "movie/d",
+            $upload = $imageInstance->uploadImage('https://image.tmdb.org/t/p/original'. $directorData->profile_path, array(
+                'folder' => 'movie/d',
                 'use_filename' => true,
                 'public_id' => $directorData->imdb_id,
-                'folder' => 'movie/d',
             ));
 
             $image_api = $directorData->imdb_id . 'jpg';
@@ -49,7 +51,7 @@ class Director extends Model
             Log::debug('Director.php upload image to host', $upload);
         }
 
-        $director = new Director([
+        $director = new self([
             'imdb_id' => $directorData->imdb_id,
             'api_id' => $directorData->id,
             'name' => $directorData->name,
